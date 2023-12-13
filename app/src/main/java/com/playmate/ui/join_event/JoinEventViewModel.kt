@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.join_event
+package com.playmate.ui.join_event
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

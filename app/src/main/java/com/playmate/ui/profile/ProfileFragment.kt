@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.profile
+package com.playmate.ui.profile
 
 import android.os.Bundle
 import android.view.LayoutInflater

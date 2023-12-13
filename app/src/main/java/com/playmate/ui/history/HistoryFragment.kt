@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.history
+package com.playmate.ui.history
 
 import android.os.Bundle
 import android.view.LayoutInflater

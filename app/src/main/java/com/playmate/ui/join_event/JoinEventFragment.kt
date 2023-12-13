@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.join_event
+package com.playmate.ui.join_event
 
 import android.os.Bundle
 import android.view.LayoutInflater

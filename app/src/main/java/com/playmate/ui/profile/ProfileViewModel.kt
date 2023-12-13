@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.profile
+package com.playmate.ui.profile
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

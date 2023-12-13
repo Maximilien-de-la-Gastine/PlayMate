@@ -7,25 +7,25 @@
 
     <fragment
         android:id="@+id/navigation_add_event"
-        android:name="com.isep.PlayMate.ui.add_event.AddEventFragment"
+        android:name="com.playmate.ui.add_event.AddEventFragment"
         android:label="Add_event"
         tools:layout="@layout/fragment_add_event" />
 
     <fragment
         android:id="@+id/navigation_join_event"
-        android:name="com.isep.PlayMate.ui.join_event.JoinEventFragment"
+        android:name="com.playmate.ui.join_event.JoinEventFragment"
         android:label="Join_event"
         tools:layout="@layout/fragment_join_event" />
 
     <fragment
         android:id="@+id/navigation_history"
-        android:name="com.isep.PlayMate.ui.history.HistoryFragment"
+        android:name="com.playmate.ui.history.HistoryFragment"
         android:label="History"
         tools:layout="@layout/fragment_history" />
 
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.isep.PlayMate.ui.profile.ProfileFragment"
+        android:name="com.playmate.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_history" />
 

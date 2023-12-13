@@ -1,4 +1,4 @@
-package com.isep.PlayMate.ui.history
+package com.playmate.ui.history
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
