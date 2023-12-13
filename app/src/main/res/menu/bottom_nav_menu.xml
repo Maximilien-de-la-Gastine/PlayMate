@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_add_event"
+        android:icon="@drawable/baseline_event_24"
+        android:title="Ajouter" />
+
+    <item
+        android:id="@+id/navigation_join_event"
+        android:icon="@drawable/baseline_event_available_24"
+        android:title="Rejoindre" />
+
+    <item
+        android:id="@+id/navigation_history"
+        android:icon="@drawable/baseline_history_24"
+        android:title="Historique" />
+    <item
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/baseline_person_24"
+        android:title="Profile" />
+
+</menu>
