@@ -9,8 +9,8 @@ android {
 
     defaultConfig {
         applicationId = "com.playmate"
-        minSdk = 31
-        targetSdk = 33
+        minSdk = 29
+        targetSdk = 29
         versionCode = 1
         versionName = "1.0"
 

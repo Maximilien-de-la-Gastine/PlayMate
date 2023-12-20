@@ -11,10 +11,13 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.playmate.R
 import com.playmate.databinding.FragmentAddEventBinding
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
@@ -30,6 +33,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private lateinit var mapView: MapView
     private lateinit var locationManager: LocationManager
     private var locationPermissionGranted = false
+    private val markersList: MutableList<GeoPoint> = mutableListOf()
+
 
     companion object {
         const val PERMISSION_REQUEST_LOCATION = 1
@@ -98,7 +103,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
         mapView.controller.setCenter(userLocation)
-        mapView.controller.setZoom(18.0) // Zoom level à ajuster selon vos besoins.
+        mapView.controller.setZoom(20.0) // Zoom level à ajuster selon vos besoins.
 
         // Ajouter un marqueur à la position de l'utilisateur
         val startMarker = Marker(mapView)
@@ -115,10 +120,21 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun addMarker(geoPoint: GeoPoint) {
         val marker = Marker(mapView)
         marker.position = geoPoint
+        marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         mapView.overlays.add(marker)
         mapView.invalidate()
+
+        // Ajouter le GeoPoint à la liste
+        markersList.add(geoPoint)
+
+        showAddEventForm(geoPoint)
+
+        // Affichage des coordonnées dans un Toast
+        val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
+        Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
+
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
@@ -146,6 +162,77 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
         return true
     }
+
+    private fun showAddEventForm(geoPoint: GeoPoint) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Ajouter un événement")
+
+        // Création du layout pour le formulaire
+        val inflater = LayoutInflater.from(requireContext())
+        val view = inflater.inflate(R.layout.add_event_form, null)
+        builder.setView(view)
+
+        // Déclaration des vues du formulaire
+        val eventNameInput = view.findViewById<EditText>(R.id.eventNameInput)
+        val sportInput = view.findViewById<EditText>(R.id.sportInput)
+        val dateInput = view.findViewById<EditText>(R.id.dateInput)
+        val timeInput = view.findViewById<EditText>(R.id.hourInput)
+        val durationInput = view.findViewById<EditText>(R.id.durationInput)
+        val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
+        val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
+        val requiredLevelInput = view.findViewById<EditText>(R.id.requiredLevelInput)
+        val latitudeInput = view.findViewById<EditText>(R.id.latitudeInput)
+        val longitudeInput = view.findViewById<EditText>(R.id.longitudeInput)
+
+        // Remplir les champs de latitude et longitude (non modifiables)
+        latitudeInput.setText(geoPoint.latitude.toString())
+        longitudeInput.setText(geoPoint.longitude.toString())
+        latitudeInput.isEnabled = false
+        longitudeInput.isEnabled = false
+
+        builder.setPositiveButton("Ajouter") { dialog, _ ->
+            val eventName = eventNameInput.text.toString()
+            val sport = sportInput.text.toString()
+            val date = dateInput.text.toString()
+            val time = timeInput.text.toString()
+            val duration = durationInput.text.toString()
+            val maxPeople = maxPeopleInput.text.toString()
+            val requiredEquipment = requiredEquipmentInput.text.toString()
+            val requiredLevel = requiredLevelInput.text.toString()
+
+            // Création de l'objet Event avec les informations saisies
+            val event = Event(
+                eventName,
+                sport,
+                date,
+                time,
+                duration,
+                maxPeople.toIntOrNull() ?: 0,
+                requiredEquipment,
+                requiredLevel,
+                geoPoint.latitude,
+                geoPoint.longitude
+            )
+
+            // Ajout de la logique pour enregistrer l'événement ici
+            // Par exemple, ajouter l'objet Event à une liste d'événements
+            // eventsList.add(event)
+
+            // Affichage d'un Toast pour informer l'utilisateur que l'événement a été ajouté
+            Toast.makeText(requireContext(), "Événement ajouté : $eventName", Toast.LENGTH_SHORT).show()
+
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("Annuler") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()
