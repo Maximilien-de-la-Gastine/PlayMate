@@ -117,7 +117,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         TODO("Not yet implemented")
     }
 
-    private fun addMarker(geoPoint: GeoPoint) {
+    fun addMarker(geoPoint: GeoPoint) {
         val marker = Marker(mapView)
         marker.position = geoPoint
         marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
@@ -127,8 +127,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
         // Ajouter le GeoPoint à la liste
         markersList.add(geoPoint)
-
-        showAddEventForm(geoPoint)
 
         // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
@@ -145,7 +143,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             // Code à exécuter si l'utilisateur confirme (par exemple, ouvrir le formulaire d'ajout)
             // Ici, vous pouvez lancer une autre activité ou fragment pour le formulaire
             // Utilisez geoPoint pour obtenir les coordonnées du clic sur la carte
-            addMarker(geoPoint)
+            showAddEventForm(geoPoint)
         }
 
         builder.setNegativeButton("Non") { dialog, which ->
@@ -217,6 +215,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             // Ajout de la logique pour enregistrer l'événement ici
             // Par exemple, ajouter l'objet Event à une liste d'événements
             // eventsList.add(event)
+
+            // Ajouter le marqueur une fois l'événement confirmé et créé
+            addMarker(geoPoint)
 
             // Affichage d'un Toast pour informer l'utilisateur que l'événement a été ajouté
             Toast.makeText(requireContext(), "Événement ajouté : $eventName", Toast.LENGTH_SHORT).show()
