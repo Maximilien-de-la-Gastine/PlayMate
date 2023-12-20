@@ -11,9 +11,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/basket_ball_with_fire"
         android:label="PlayMate"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/basket_ball_with_fire"
         android:supportsRtl="true"
         android:theme="@style/Theme.PlayMate"
         tools:targetApi="31">
