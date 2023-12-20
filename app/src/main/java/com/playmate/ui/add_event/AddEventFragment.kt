@@ -11,6 +11,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -103,7 +104,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
         mapView.controller.setCenter(userLocation)
-        mapView.controller.setZoom(20.0) // Zoom level à ajuster selon vos besoins.
+        mapView.controller.setZoom(10.0) // Zoom level à ajuster selon vos besoins.
 
         // Ajouter un marqueur à la position de l'utilisateur
         val startMarker = Marker(mapView)
@@ -132,7 +133,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
-
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
@@ -233,7 +233,25 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         dialog.show()
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
+        // Trouver la référence de la barre de recherche EditText
+        val searchEditText = view.findViewById<EditText>(R.id.searchBar)
+
+        // Ajouter un écouteur pour détecter l'action de recherche (IME_ACTION_SEARCH)
+        searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val searchText = searchEditText.text.toString().trim()
+                if (searchText.isNotEmpty()) {
+                    performSearch(searchText, this)
+                    // Fermez le clavier ici si nécessaire
+                    return@setOnEditorActionListener true
+                }
+            }
+            false
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
