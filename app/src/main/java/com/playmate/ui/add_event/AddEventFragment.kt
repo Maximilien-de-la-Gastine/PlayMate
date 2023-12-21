@@ -102,21 +102,28 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         updateMapLocation(location)
     }
 
+
+    private var userMarker: Marker? = null
+
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
-        mapView.controller.setCenter(userLocation)
-        mapView.controller.setZoom(20.0) // Zoom level à ajuster selon vos besoins.
 
-        // Ajouter un marqueur à la position de l'utilisateur
-        val startMarker = Marker(mapView)
-        startMarker.position = userLocation
-        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        mapView.overlays.add(startMarker)
-        mapView.invalidate()
+        if (userMarker == null) {
+            userMarker = Marker(mapView)
+            userMarker?.position = userLocation
+            userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            mapView.overlays.add(userMarker)
+        } else {
+            userMarker?.position = userLocation
+        }
+
+        // Zoom à votre niveau préféré sans recentrer la carte
+        mapView.controller.setZoom(20.0)
     }
 
+
     override fun longPressHelper(p: GeoPoint?): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 
     fun addMarker(geoPoint: GeoPoint) {
@@ -254,20 +261,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
 
         val centerButton = view.findViewById<Button>(R.id.centerButton)
-        val zoomInButton = view.findViewById<Button>(R.id.zoomInButton)
-        val zoomOutButton = view.findViewById<Button>(R.id.zoomOutButton)
 
-        // Écouteurs de clic pour les boutons
         centerButton.setOnClickListener {
             centerMapOnUserLocation()
-        }
-
-        zoomInButton.setOnClickListener {
-            zoomInMap()
-        }
-
-        zoomOutButton.setOnClickListener {
-            zoomOutMap()
         }
     }
 
@@ -294,20 +290,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
-
-    private fun zoomInMap() {
-        val currentZoomLevel = mapView.zoomLevelDouble
-        val maxZoomLevel = mapView.tileProvider.tileSource.maximumZoomLevel
-
-        // Vérifie si l'ajout de 5.0 au niveau de zoom actuel reste dans la plage autorisée
-        if (currentZoomLevel + 1.0 <= maxZoomLevel) {
-            val newZoomLevel = currentZoomLevel + 1
-            mapView.controller.setZoom(newZoomLevel)
-        } else {
-            // Si le zoom dépasse la valeur maximale, fixez le zoom au maximum
-            mapView.controller.setZoom(maxZoomLevel)
-        }
-    }
 
     private fun zoomOutMap() {
         val currentZoomLevel = mapView.zoomLevelDouble

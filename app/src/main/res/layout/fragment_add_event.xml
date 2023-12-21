@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.add_event.AddEventFragment">
+    tools:context=".ui.add_event.AddEventFragment"
+    tools:ignore="ExtraText">
 
     <org.osmdroid.views.MapView
         android:id="@+id/mapView"
@@ -17,36 +18,15 @@
 
     <Button
         android:id="@+id/centerButton"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_width="70dp"
+        android:layout_height="80dp"
         android:layout_margin="8dp"
-        android:text="O"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:icon="@drawable/baseline_gps_not_fixed_24"
         app:layout_constraintBottom_toBottomOf="@id/mapView"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="@id/mapView"
-        app:layout_constraintWidth_default="wrap"
-        app:layout_constraintDimensionRatio="1:1" />
-
-    <Button
-        android:id="@+id/zoomOutButton"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:text="-"
-        app:layout_constraintBottom_toTopOf="@id/centerButton"
-        app:layout_constraintEnd_toEndOf="@id/mapView"
-        app:layout_constraintWidth_default="wrap"
-        app:layout_constraintDimensionRatio="1:1" />
-
-    <Button
-        android:id="@+id/zoomInButton"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:text="+"
-        app:layout_constraintBottom_toTopOf="@id/zoomOutButton"
-        app:layout_constraintEnd_toEndOf="@id/mapView"
-        app:layout_constraintWidth_default="wrap"
-        app:layout_constraintDimensionRatio="1:1" />
+        app:layout_constraintWidth_default="wrap" />
 
     <EditText
         android:id="@+id/searchBar"
