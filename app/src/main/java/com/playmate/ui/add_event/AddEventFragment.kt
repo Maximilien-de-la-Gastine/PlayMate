@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -104,7 +105,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
         mapView.controller.setCenter(userLocation)
-        mapView.controller.setZoom(10.0) // Zoom level à ajuster selon vos besoins.
+        mapView.controller.setZoom(20.0) // Zoom level à ajuster selon vos besoins.
 
         // Ajouter un marqueur à la position de l'utilisateur
         val startMarker = Marker(mapView)
@@ -250,6 +251,75 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 }
             }
             false
+        }
+
+        val centerButton = view.findViewById<Button>(R.id.centerButton)
+        val zoomInButton = view.findViewById<Button>(R.id.zoomInButton)
+        val zoomOutButton = view.findViewById<Button>(R.id.zoomOutButton)
+
+        // Écouteurs de clic pour les boutons
+        centerButton.setOnClickListener {
+            centerMapOnUserLocation()
+        }
+
+        zoomInButton.setOnClickListener {
+            zoomInMap()
+        }
+
+        zoomOutButton.setOnClickListener {
+            zoomOutMap()
+        }
+    }
+
+    private fun centerMapOnUserLocation() {
+        if (locationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                location?.let {
+                    val userLocation = GeoPoint(it.latitude, it.longitude)
+                    mapView.controller.setCenter(userLocation)
+                    mapView.controller.setZoom(20.0) // Zoom à votre niveau préféré
+                }
+            } else {
+                // La permission n'est pas accordée, demandez-la à nouveau
+                requestLocationPermission()
+            }
+        } else {
+            // Gérer le cas où la permission de localisation n'est pas accordée
+            requestLocationPermission()
+        }
+    }
+
+
+    private fun zoomInMap() {
+        val currentZoomLevel = mapView.zoomLevelDouble
+        val maxZoomLevel = mapView.tileProvider.tileSource.maximumZoomLevel
+
+        // Vérifie si l'ajout de 5.0 au niveau de zoom actuel reste dans la plage autorisée
+        if (currentZoomLevel + 1.0 <= maxZoomLevel) {
+            val newZoomLevel = currentZoomLevel + 1
+            mapView.controller.setZoom(newZoomLevel)
+        } else {
+            // Si le zoom dépasse la valeur maximale, fixez le zoom au maximum
+            mapView.controller.setZoom(maxZoomLevel)
+        }
+    }
+
+    private fun zoomOutMap() {
+        val currentZoomLevel = mapView.zoomLevelDouble
+        val minZoomLevel = mapView.tileProvider.tileSource.minimumZoomLevel
+
+        // Vérifie si la soustraction de 5.0 du niveau de zoom actuel reste dans la plage autorisée
+        if (currentZoomLevel - 1.0 >= minZoomLevel) {
+            val newZoomLevel = currentZoomLevel - 1.0
+            mapView.controller.setZoom(newZoomLevel)
+        } else {
+            // Si le zoom dépasse la valeur minimale, fixez le zoom au minimum
+            mapView.controller.setZoom(minZoomLevel)
         }
     }
 

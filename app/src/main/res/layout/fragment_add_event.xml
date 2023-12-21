@@ -15,6 +15,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/centerButton"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:text="O"
+        app:layout_constraintBottom_toBottomOf="@id/mapView"
+        app:layout_constraintEnd_toEndOf="@id/mapView"
+        app:layout_constraintWidth_default="wrap"
+        app:layout_constraintDimensionRatio="1:1" />
+
+    <Button
+        android:id="@+id/zoomOutButton"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:text="-"
+        app:layout_constraintBottom_toTopOf="@id/centerButton"
+        app:layout_constraintEnd_toEndOf="@id/mapView"
+        app:layout_constraintWidth_default="wrap"
+        app:layout_constraintDimensionRatio="1:1" />
+
+    <Button
+        android:id="@+id/zoomInButton"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:text="+"
+        app:layout_constraintBottom_toTopOf="@id/zoomOutButton"
+        app:layout_constraintEnd_toEndOf="@id/mapView"
+        app:layout_constraintWidth_default="wrap"
+        app:layout_constraintDimensionRatio="1:1" />
+
     <EditText
         android:id="@+id/searchBar"
         android:layout_width="0dp"
@@ -29,6 +62,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:minHeight="48dp" />
+        android:minHeight="48dp"
+        android:autofillHints="" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
