@@ -1,6 +1,7 @@
 package com.playmate.ui.add_event
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -9,6 +10,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -99,9 +101,11 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     override fun onLocationChanged(location: Location) {
+        if (followUserLocation) {
+            centerMapOnUserLocation()
+        }
         updateMapLocation(location)
     }
-
 
     private var userMarker: Marker? = null
 
@@ -163,7 +167,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         p?.let { point ->
-            // Appeler la fonction pour afficher la boîte de dialogue de confirmation
             showConfirmationDialog(point)
         }
         return true
@@ -241,6 +244,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         dialog.show()
     }
 
+    private var followUserLocation = false
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -260,10 +266,21 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             false
         }
 
-        val centerButton = view.findViewById<Button>(R.id.centerButton)
+        val followButton = view.findViewById<Button>(R.id.centerButton)
+        followButton.setOnClickListener {
+            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
+            followUserLocation = true
+            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
+        }
 
-        centerButton.setOnClickListener {
-            centerMapOnUserLocation()
+        mapView.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
+                    followUserLocation = false
+                }
+            }
+            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
         }
     }
 
@@ -278,7 +295,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 location?.let {
                     val userLocation = GeoPoint(it.latitude, it.longitude)
                     mapView.controller.setCenter(userLocation)
-                    mapView.controller.setZoom(20.0) // Zoom à votre niveau préféré
+                    mapView.controller.setZoom(20.0)
+                    followUserLocation = true
                 }
             } else {
                 // La permission n'est pas accordée, demandez-la à nouveau
@@ -287,21 +305,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         } else {
             // Gérer le cas où la permission de localisation n'est pas accordée
             requestLocationPermission()
-        }
-    }
-
-
-    private fun zoomOutMap() {
-        val currentZoomLevel = mapView.zoomLevelDouble
-        val minZoomLevel = mapView.tileProvider.tileSource.minimumZoomLevel
-
-        // Vérifie si la soustraction de 5.0 du niveau de zoom actuel reste dans la plage autorisée
-        if (currentZoomLevel - 1.0 >= minZoomLevel) {
-            val newZoomLevel = currentZoomLevel - 1.0
-            mapView.controller.setZoom(newZoomLevel)
-        } else {
-            // Si le zoom dépasse la valeur minimale, fixez le zoom au minimum
-            mapView.controller.setZoom(minZoomLevel)
         }
     }
 
