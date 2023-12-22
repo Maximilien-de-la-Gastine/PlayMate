@@ -2,6 +2,8 @@ package com.playmate.ui.add_event
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -14,8 +16,11 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -30,6 +35,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import java.util.Calendar
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -107,8 +113,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         updateMapLocation(location)
     }
 
-    private var userMarker: Marker? = null
 
+    private var userMarker: Marker? = null
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
 
@@ -124,7 +130,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         // Zoom à votre niveau préféré sans recentrer la carte
         mapView.controller.setZoom(20.0)
     }
-
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
         return false
@@ -183,15 +188,36 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
         // Déclaration des vues du formulaire
         val eventNameInput = view.findViewById<EditText>(R.id.eventNameInput)
-        val sportInput = view.findViewById<EditText>(R.id.sportInput)
-        val dateInput = view.findViewById<EditText>(R.id.dateInput)
-        val timeInput = view.findViewById<EditText>(R.id.hourInput)
+        val sportInput = view.findViewById<Spinner>(R.id.sportInput)
+        val dateInput = view.findViewById<TextView>(R.id.dateInput)
+        val timeInput = view.findViewById<TextView>(R.id.hourInput)
         val durationInput = view.findViewById<EditText>(R.id.durationInput)
         val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
         val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
-        val requiredLevelInput = view.findViewById<EditText>(R.id.requiredLevelInput)
+        val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
         val latitudeInput = view.findViewById<EditText>(R.id.latitudeInput)
         val longitudeInput = view.findViewById<EditText>(R.id.longitudeInput)
+
+        // Options de sports disponibles
+        val sports = arrayOf("Choisir un sport", "Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
+
+
+        // Création de l'adaptateur pour le Spinner
+        val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sports)
+        sportAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sportInput.adapter = sportAdapter
+        sportInput.setSelection(0, false)
+        sportInput.prompt = "Choisir un sport"
+
+        //option pour le niveau
+        val level = arrayOf("Niveau requis", "Tous les niveaux", "Débutant", "Intermediaire", "Elevé")
+
+        //spinner du niveau
+        val levelAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, level)
+        levelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        requiredLevelInput.adapter = levelAdapter
+        requiredLevelInput.setSelection(0, false)
+        requiredLevelInput.prompt = "Choisir le niveau"
 
         // Remplir les champs de latitude et longitude (non modifiables)
         latitudeInput.setText(geoPoint.latitude.toString())
@@ -199,20 +225,61 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         latitudeInput.isEnabled = false
         longitudeInput.isEnabled = false
 
+        // Sélection de la date avec DatePicker
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val datePickerDialog = DatePickerDialog(
+            requireContext(),
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear" // +1 car les mois commencent à 0
+                dateInput.text = selectedDate
+            },
+            year,
+            month,
+            day
+        )
+
+        dateInput.isFocusable = false
+        dateInput.setOnClickListener {
+            datePickerDialog.show()
+        }
+
+        timeInput.isFocusable = false
+
+        timeInput.setOnClickListener {
+            val cal = Calendar.getInstance()
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+            val minute = cal.get(Calendar.MINUTE)
+
+            val timePickerDialog = TimePickerDialog(
+                requireContext(),
+                { _, selectedHour, selectedMinute ->
+                    timeInput.setText(String.format("%02d:%02d", selectedHour, selectedMinute))
+                },
+                hour,
+                minute,
+                true
+            )
+            timePickerDialog.show()
+        }
+
         builder.setPositiveButton("Ajouter") { dialog, _ ->
             val eventName = eventNameInput.text.toString()
-            val sport = sportInput.text.toString()
+            val selectedSport = sportInput.selectedItem.toString()
             val date = dateInput.text.toString()
             val time = timeInput.text.toString()
             val duration = durationInput.text.toString()
             val maxPeople = maxPeopleInput.text.toString()
             val requiredEquipment = requiredEquipmentInput.text.toString()
-            val requiredLevel = requiredLevelInput.text.toString()
+            val requiredLevel = requiredLevelInput.selectedItem.toString()
 
             // Création de l'objet Event avec les informations saisies
             val event = Event(
                 eventName,
-                sport,
+                selectedSport,
                 date,
                 time,
                 duration,
@@ -223,11 +290,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 geoPoint.longitude
             )
 
-            // Ajout de la logique pour enregistrer l'événement ici
-            // Par exemple, ajouter l'objet Event à une liste d'événements
-            // eventsList.add(event)
-
-            // Ajouter le marqueur une fois l'événement confirmé et créé
             addMarker(geoPoint)
 
             // Affichage d'un Toast pour informer l'utilisateur que l'événement a été ajouté
@@ -243,6 +305,12 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val dialog = builder.create()
         dialog.show()
     }
+
+
+
+
+
+
 
     private var followUserLocation = false
 

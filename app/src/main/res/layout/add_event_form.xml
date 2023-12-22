@@ -14,13 +14,13 @@
             android:id="@+id/eventNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nom de l'événement" />
+            android:hint="Description de l'evenement" />
 
-        <EditText
+        <Spinner
             android:id="@+id/sportInput"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Sport" />
+            android:layout_height="wrap_content" />
+
 
         <EditText
             android:id="@+id/dateInput"
@@ -32,7 +32,8 @@
             android:id="@+id/hourInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Horaire" />
+            android:hint="Horaire"
+            android:focusable="false" />
 
         <EditText
             android:id="@+id/durationInput"
@@ -44,7 +45,9 @@
             android:id="@+id/maxParticipantsInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre de participants max" />
+            android:hint="Nombre de participants max"
+            android:inputType="number" />
+
 
         <EditText
             android:id="@+id/equipmentInput"
@@ -52,7 +55,7 @@
             android:layout_height="wrap_content"
             android:hint="Matériel nécessaire" />
 
-        <EditText
+        <Spinner
             android:id="@+id/requiredLevelInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
