@@ -142,23 +142,27 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     fun addMarker(geoPoint: GeoPoint) {
+        // Création du marqueur
         val marker = Marker(mapView)
         marker.position = geoPoint
         marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+
+        // Ajout du GeoPoint à la liste via MarketManager
+        MarketManager.addMarker(geoPoint)
+
+        // Ajout du marqueur à la carte
         mapView.overlays.add(marker)
         mapView.invalidate()
 
-        // Ajouter le GeoPoint à la liste
-        markersList.add(geoPoint)
-
-        // Centrer la carte sur le nouveau marqueur
+        // Centrage de la carte sur le nouveau marqueur
         mapView.controller.setCenter(geoPoint)
 
         // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
+
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
