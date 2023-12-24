@@ -15,6 +15,11 @@ interface NominatimService {
         @Query("q") query: String,
         @Query("format") format: String = "json"
     ): Call<NominatimResponse>
+
+    @GET("search") // Modifier le chemin en fonction de votre API
+    fun getSuggestions(
+        @Query("query") query: String
+    ): Call<List<String>>
 }
 
 fun performSearch(query: String, fragment: AddEventFragment) {
@@ -42,19 +47,18 @@ fun performSearch(query: String, fragment: AddEventFragment) {
                     // Créez un objet GeoPoint avec les coordonnées
                     val geoPoint = GeoPoint(latitude, longitude)
 
-                    // Ajoutez un marqueur à la position trouvée sur la carte
-                    fragment.addMarker(geoPoint)
+                    // Ouvrir le formulaire avec les coordonnées du lieu sélectionné
+                    fragment.showAddEventForm(geoPoint)
+                } else {
+                    // Gérer le cas où aucun résultat n'a été trouvé
                 }
             } else {
-                // Gérez les erreurs de réponse ici
+                // Gérer les erreurs de réponse ici
             }
         }
 
         override fun onFailure(call: Call<NominatimResponse>, t: Throwable) {
-            // Gérez les échecs de requête ici
+            // Gérer les échecs de requête ici
         }
     })
 }
-
-
-

@@ -11,11 +11,14 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -35,7 +38,13 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
+import android.widget.AutoCompleteTextView
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -100,7 +109,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 updateMapLocation(location)
             }
 
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, this, Looper.getMainLooper())
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this, Looper.getMainLooper())
         } else {
             ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
         }
@@ -126,9 +135,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         } else {
             userMarker?.position = userLocation
         }
-
-        // Zoom à votre niveau préféré sans recentrer la carte
-        mapView.controller.setZoom(20.0)
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
@@ -145,6 +151,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
         // Ajouter le GeoPoint à la liste
         markersList.add(geoPoint)
+
+        // Centrer la carte sur le nouveau marqueur
+        mapView.controller.setCenter(geoPoint)
 
         // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
@@ -177,7 +186,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         return true
     }
 
-    private fun showAddEventForm(geoPoint: GeoPoint) {
+    fun showAddEventForm(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Ajouter un événement")
 
@@ -292,6 +301,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
             addMarker(geoPoint)
 
+            followUserLocation = false
+
             // Affichage d'un Toast pour informer l'utilisateur que l'événement a été ajouté
             Toast.makeText(requireContext(), "Événement ajouté : $eventName", Toast.LENGTH_SHORT).show()
 
@@ -307,11 +318,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
 
-
-
-
-
-
     private var followUserLocation = false
 
     @SuppressLint("ClickableViewAccessibility")
@@ -319,7 +325,27 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         super.onViewCreated(view, savedInstanceState)
 
         // Trouver la référence de la barre de recherche EditText
-        val searchEditText = view.findViewById<EditText>(R.id.searchBar)
+        val searchEditText = view.findViewById<AutoCompleteTextView>(R.id.searchBar)
+        val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+
+        // Créer un adaptateur pour les suggestions (vide pour le moment)
+        val adapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line)
+        searchEditText.setAdapter(adapter)
+
+        // Ajouter un écouteur pour détecter le texte modifié
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val searchText = s.toString().trim()
+
+                // Appeler l'API pour récupérer les suggestions en fonction du texte actuel
+                getAutocompleteSuggestions(searchText, adapter)
+            }
+        })
 
         // Ajouter un écouteur pour détecter l'action de recherche (IME_ACTION_SEARCH)
         searchEditText.setOnEditorActionListener { _, actionId, _ ->
@@ -327,12 +353,17 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 val searchText = searchEditText.text.toString().trim()
                 if (searchText.isNotEmpty()) {
                     performSearch(searchText, this)
-                    // Fermez le clavier ici si nécessaire
+
+                    // Fermez le clavier ici
+                    val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(searchEditText.windowToken, 0)
+
                     return@setOnEditorActionListener true
                 }
             }
             false
         }
+
 
         val followButton = view.findViewById<Button>(R.id.centerButton)
         followButton.setOnClickListener {
@@ -352,6 +383,39 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
+    private fun getAutocompleteSuggestions(query: String, adapter: ArrayAdapter<String>) {
+        // Ici, vous feriez un appel à une API ou utiliseriez une logique pour obtenir des suggestions basées sur le texte de recherche
+        // Vous pouvez mettre en œuvre cette logique en utilisant Retrofit ou une autre bibliothèque de réseau
+
+        // Par exemple, si vous utilisez Retrofit pour obtenir des suggestions d'une API, cela pourrait ressembler à ceci :
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://votre-api.com/") // Remplacez par l'URL de votre API
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(NominatimService::class.java)
+        val call = service.getSuggestions(query)
+
+        call.enqueue(object : Callback<List<String>> {
+            override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
+                if (response.isSuccessful) {
+                    val suggestions = response.body()
+                    suggestions?.let {
+                        adapter.clear()
+                        adapter.addAll(it)
+                        adapter.notifyDataSetChanged()
+                    }
+                } else {
+                    // Gérer les erreurs de réponse de l'API ici
+                }
+            }
+
+            override fun onFailure(call: Call<List<String>>, t: Throwable) {
+                // Gérer les échecs de requête ici
+            }
+        })
+    }
+
     private fun centerMapOnUserLocation() {
         if (locationPermissionGranted) {
             if (ContextCompat.checkSelfPermission(
@@ -363,7 +427,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 location?.let {
                     val userLocation = GeoPoint(it.latitude, it.longitude)
                     mapView.controller.setCenter(userLocation)
-                    mapView.controller.setZoom(20.0)
+                    mapView.controller.setZoom(19.5)
                     followUserLocation = true
                 }
             } else {
