@@ -45,6 +45,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import android.widget.AutoCompleteTextView
+import com.playmate.MarkerDBHelper
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -148,9 +149,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
-        // Ajout du GeoPoint à la liste via MarketManager
-        MarketManager.addMarker(geoPoint)
-
         // Ajout du marqueur à la carte
         mapView.overlays.add(marker)
         mapView.invalidate()
@@ -163,6 +161,23 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
 
+
+    // Call addMarker method when you add a marker
+    fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event) {
+        val dbHelper = MarkerDBHelper(requireContext())
+        val insertedId = dbHelper.addMarkerWithDetails(
+            geoPoint.latitude,
+            geoPoint.longitude,
+            event.eventName,
+            event.sport
+            // ... Ajoutez d'autres détails du formulaire ici
+        )
+        if (insertedId != -1L) {
+            // Gérer l'insertion réussie
+        } else {
+            // Gérer l'échec de l'insertion
+        }
+    }
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
@@ -302,6 +317,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 geoPoint.latitude,
                 geoPoint.longitude
             )
+
+            addMarkerToDatabase(geoPoint, event)
 
             addMarker(geoPoint)
 
