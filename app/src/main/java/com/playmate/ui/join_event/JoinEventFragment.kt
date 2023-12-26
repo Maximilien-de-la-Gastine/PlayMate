@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -30,6 +29,11 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
     private lateinit var mapView: MapView
     private lateinit var mapController: IMapController
     private lateinit var locationManager: LocationManager
+    private var userMarker: Marker? = null
+
+    companion object {
+        const val PERMISSION_REQUEST_LOCATION = 1
+    }
 
     @SuppressLint("Range")
     override fun onCreateView(
@@ -48,10 +52,8 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
         mapView.setMultiTouchControls(true)
         mapController = mapView.controller
 
-        // Initialize the location manager
         locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        // Check for location permission
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -62,7 +64,7 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
                 5000,
                 10f,
                 this
-            ) // Update every 5 seconds or 10 meters
+            )
         } else {
             ActivityCompat.requestPermissions(
                 requireActivity(),
@@ -71,13 +73,9 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
             )
         }
 
-        // Récupère une instance de MarkerDBHelper
         val markerDBHelper = MarkerDBHelper(requireContext())
-
-        // Récupère tous les marqueurs depuis la base de données
         val markersCursor = markerDBHelper.getAllMarkers()
 
-        // Si des marqueurs sont disponibles
         if (markersCursor.moveToFirst()) {
             do {
                 val latitude =
@@ -85,34 +83,63 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
                 val longitude =
                     markersCursor.getDouble(markersCursor.getColumnIndex(MarkerDBHelper.COLUMN_LONGITUDE))
 
-                // Ajoute un marqueur à la carte pour chaque entrée dans la base de données
                 val marker = Marker(mapView)
                 marker.position = GeoPoint(latitude, longitude)
-                // Configurations supplémentaires pour le marqueur
                 mapView.overlays.add(marker)
-
             } while (markersCursor.moveToNext())
         }
 
-        // Ferme le curseur après utilisation
         markersCursor.close()
+
+        val centerButton = binding.centerButton // Replace 'centerButton' with your actual button ID
+        centerButton.setOnClickListener {
+            centerMapOnUserLocation()
+        }
 
         return root
     }
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-        // Handle single tap on map
         return true
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
-        // Handle long press on map
         return true
     }
 
     override fun onLocationChanged(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
         centerMapOnLocation(userLocation)
+
+        // Add or update user's marker position
+        if (userMarker == null) {
+            userMarker = Marker(mapView)
+            userMarker?.position = userLocation
+            mapView.overlays.add(userMarker)
+        } else {
+            userMarker?.position = userLocation
+        }
+    }
+
+    private fun centerMapOnUserLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            location?.let {
+                val userLocation = GeoPoint(it.latitude, it.longitude)
+                mapController.setCenter(userLocation)
+                mapController.setZoom(19.5)
+            }
+        } else {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                PERMISSION_REQUEST_LOCATION
+            )
+        }
     }
 
     private fun centerMapOnLocation(geoPoint: GeoPoint) {
@@ -139,9 +166,7 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        const val PERMISSION_REQUEST_LOCATION = 1
+        mapView.overlays.remove(userMarker)
+        userMarker = null
     }
 }

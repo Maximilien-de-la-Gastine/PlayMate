@@ -15,4 +15,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/centerButton"
+        android:layout_width="70dp"
+        android:layout_height="80dp"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:icon="@drawable/baseline_gps_not_fixed_24"
+        app:layout_constraintBottom_toBottomOf="@id/mapView"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="@id/mapView"
+        app:layout_constraintWidth_default="wrap" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
