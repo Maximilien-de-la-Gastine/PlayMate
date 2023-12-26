@@ -463,6 +463,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        mapView.overlays.remove(userMarker)
+        userMarker = null
     }
 }
