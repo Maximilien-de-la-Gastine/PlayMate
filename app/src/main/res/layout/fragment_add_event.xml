@@ -8,7 +8,7 @@
     tools:ignore="ExtraText">
 
     <org.osmdroid.views.MapView
-        android:id="@+id/mapView"
+        android:id="@+id/mapViewAddEvent"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -23,9 +23,9 @@
         android:layout_margin="8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         app:icon="@drawable/baseline_gps_not_fixed_24"
-        app:layout_constraintBottom_toBottomOf="@id/mapView"
+        app:layout_constraintBottom_toBottomOf="@id/mapViewAddEvent"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintEnd_toEndOf="@id/mapView"
+        app:layout_constraintEnd_toEndOf="@id/mapViewAddEvent"
         app:layout_constraintWidth_default="wrap" />
 
     <AutoCompleteTextView

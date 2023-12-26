@@ -50,10 +50,9 @@ import com.playmate.MarkerDBHelper
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private var _binding: FragmentAddEventBinding? = null
-    private lateinit var mapView: MapView
+    private lateinit var mapViewAddEvent: MapView
     private lateinit var locationManager: LocationManager
     private var locationPermissionGranted = false
-    private val markersList: MutableList<GeoPoint> = mutableListOf()
 
 
     companion object {
@@ -69,16 +68,16 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         _binding = binding
         val root: View = binding.root
 
-        // Initialize the map view
-        mapView = binding.mapView
+        // Initialise la vue de la carte
+        mapViewAddEvent = binding.mapViewAddEvent // Met à jour la référence à la carte renommée
         Configuration.getInstance().userAgentValue = requireActivity().packageName
-        mapView.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
-        mapView.setMultiTouchControls(true)
+        mapViewAddEvent.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+        mapViewAddEvent.setMultiTouchControls(true)
 
         locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         requestLocationPermission()
 
-        mapView.overlays.add(0, MapEventsOverlay(this))
+        mapViewAddEvent.overlays.add(0, MapEventsOverlay(this))
 
         return root
     }
@@ -128,15 +127,19 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
 
-        if (userMarker == null) {
-            userMarker = Marker(mapView)
-            userMarker?.position = userLocation
-            userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            mapView.overlays.add(userMarker)
-        } else {
-            userMarker?.position = userLocation
+        // Vérification de la nullité de mapView et userMarker
+        if (::mapViewAddEvent.isInitialized) {
+            if (userMarker == null) {
+                userMarker = Marker(mapViewAddEvent)
+                userMarker?.position = userLocation
+                userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                mapViewAddEvent.overlays.add(userMarker)
+            } else {
+                userMarker?.position = userLocation
+            }
         }
     }
+
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
         return false
@@ -144,17 +147,17 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     fun addMarker(geoPoint: GeoPoint) {
         // Création du marqueur
-        val marker = Marker(mapView)
+        val marker = Marker(mapViewAddEvent)
         marker.position = geoPoint
         marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
         // Ajout du marqueur à la carte
-        mapView.overlays.add(marker)
-        mapView.invalidate()
+        mapViewAddEvent.overlays.add(marker)
+        mapViewAddEvent.invalidate()
 
         // Centrage de la carte sur le nouveau marqueur
-        mapView.controller.setCenter(geoPoint)
+        mapViewAddEvent.controller.setCenter(geoPoint)
 
         // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
@@ -393,7 +396,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
         }
 
-        mapView.setOnTouchListener { _, event ->
+        mapViewAddEvent.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_MOVE -> {
                     // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
@@ -447,8 +450,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 location?.let {
                     val userLocation = GeoPoint(it.latitude, it.longitude)
-                    mapView.controller.setCenter(userLocation)
-                    mapView.controller.setZoom(19.5)
+                    mapViewAddEvent.controller.setCenter(userLocation)
+                    mapViewAddEvent.controller.setZoom(19.5)
                     followUserLocation = true
                 }
             } else {
@@ -463,7 +466,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        mapView.overlays.remove(userMarker)
-        userMarker = null
+//        if (::mapView.isInitialized && userMarker != null) {
+//            mapView.overlays.remove(userMarker)
+//            userMarker = null
+//        }
     }
+
 }

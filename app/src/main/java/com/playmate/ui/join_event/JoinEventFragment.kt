@@ -8,34 +8,39 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Looper
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.playmate.MarkerDBHelper
-import com.playmate.databinding.FragmentJoinEventBinding
-import org.osmdroid.api.IMapController
+import com.playmate.R
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import com.playmate.databinding.FragmentJoinEventBinding
 
-class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
+class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private var _binding: FragmentJoinEventBinding? = null
-    private lateinit var mapView: MapView
-    private lateinit var mapController: IMapController
+    private lateinit var mapViewJoinEvent: MapView
     private lateinit var locationManager: LocationManager
-    private var userMarker: Marker? = null
+    private var locationPermissionGranted = false
+
 
     companion object {
         const val PERMISSION_REQUEST_LOCATION = 1
     }
 
-    @SuppressLint("Range")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,128 +50,178 @@ class JoinEventFragment : Fragment(), MapEventsReceiver, LocationListener {
         _binding = binding
         val root: View = binding.root
 
-        Configuration.getInstance().userAgentValue = requireContext().packageName
-
-        mapView = binding.mapView
-        mapView.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
-        mapView.setMultiTouchControls(true)
-        mapController = mapView.controller
+        // Initialise la vue de la carte
+        mapViewJoinEvent = binding.mapViewJoinEvent // Met à jour la référence à la carte renommée
+        Configuration.getInstance().userAgentValue = requireActivity().packageName
+        mapViewJoinEvent.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+        mapViewJoinEvent.setMultiTouchControls(true)
 
         locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        requestLocationPermission()
 
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                5000,
-                10f,
-                this
-            )
-        } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSION_REQUEST_LOCATION
-            )
-        }
+        mapViewJoinEvent.overlays.add(0, MapEventsOverlay(this))
 
-        val markerDBHelper = MarkerDBHelper(requireContext())
-        val markersCursor = markerDBHelper.getAllMarkers()
-
-        if (markersCursor.moveToFirst()) {
-            do {
-                val latitude =
-                    markersCursor.getDouble(markersCursor.getColumnIndex(MarkerDBHelper.COLUMN_LATITUDE))
-                val longitude =
-                    markersCursor.getDouble(markersCursor.getColumnIndex(MarkerDBHelper.COLUMN_LONGITUDE))
-
-                val marker = Marker(mapView)
-                marker.position = GeoPoint(latitude, longitude)
-                mapView.overlays.add(marker)
-            } while (markersCursor.moveToNext())
-        }
-
-        markersCursor.close()
-
-        val centerButton = binding.centerButton // Replace 'centerButton' with your actual button ID
-        centerButton.setOnClickListener {
-            centerMapOnUserLocation()
-        }
+        showMarkersFromDatabase()
+        singleTapConfirmedHelper(p = null)
 
         return root
     }
 
-    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-        return true
+    private fun requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
+        } else {
+            locationPermissionGranted = true
+            showUserLocation()
+        }
     }
 
-    override fun longPressHelper(p: GeoPoint?): Boolean {
-        return true
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_LOCATION) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                locationPermissionGranted = true
+                showUserLocation()
+            } else {
+                // Permission was denied. Disable the functionality that depends on this permission.
+            }
+        }
+    }
+
+    private fun showUserLocation() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
+                updateMapLocation(location)
+            }
+
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this, Looper.getMainLooper())
+        } else {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
+        }
     }
 
     override fun onLocationChanged(location: Location) {
-        val userLocation = GeoPoint(location.latitude, location.longitude)
-        centerMapOnLocation(userLocation)
+        if (isAdded) { // Vérifie si le fragment est attaché à un contexte
+            if (followUserLocation) {
+                centerMapOnUserLocation()
+            }
+            updateMapLocation(location)
+        }
+    }
 
-        // Add or update user's marker position
-        if (userMarker == null) {
-            userMarker = Marker(mapView)
-            userMarker?.position = userLocation
-            mapView.overlays.add(userMarker)
-        } else {
-            userMarker?.position = userLocation
+
+    private var userMarker: Marker? = null
+    private fun updateMapLocation(location: Location) {
+        val userLocation = GeoPoint(location.latitude, location.longitude)
+
+        // Vérification de la nullité de mapView et userMarker
+        if (::mapViewJoinEvent.isInitialized) {
+            if (userMarker == null) {
+                userMarker = Marker(mapViewJoinEvent)
+                userMarker?.position = userLocation
+                userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                mapViewJoinEvent.overlays.add(userMarker)
+            } else {
+                userMarker?.position = userLocation
+            }
+        }
+    }
+
+    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+        if (p != null) {
+            mapViewJoinEvent.overlays.filterIsInstance(Marker::class.java).forEach { marker ->
+                val markerPosition = marker.position
+                if (markerPosition != null && markerPosition == p) {
+                    // Marqueur touché, affichage du sport associé au marqueur
+                    val sportName = marker.title
+                    sportName?.let {
+                        Toast.makeText(requireContext(), "Sport: $it", Toast.LENGTH_SHORT).show()
+                    }
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    override fun longPressHelper(p: GeoPoint?): Boolean {
+        return false
+    }
+
+
+    private var followUserLocation = false
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+        val followButton = view.findViewById<Button>(R.id.centerButton)
+        followButton.setOnClickListener {
+            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
+            followUserLocation = true
+            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
+        }
+
+        mapViewJoinEvent.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
+                    followUserLocation = false
+                }
+            }
+            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
         }
     }
 
     private fun centerMapOnUserLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            location?.let {
-                val userLocation = GeoPoint(it.latitude, it.longitude)
-                mapController.setCenter(userLocation)
-                mapController.setZoom(19.5)
+        if (isAdded && locationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                location?.let {
+                    val userLocation = GeoPoint(it.latitude, it.longitude)
+                    mapViewJoinEvent.controller.setCenter(userLocation)
+                    mapViewJoinEvent.controller.setZoom(19.5)
+                    followUserLocation = true
+                }
+            } else {
+                // La permission n'est pas accordée, demandez-la à nouveau
+                requestLocationPermission()
             }
         } else {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSION_REQUEST_LOCATION
-            )
+            // Gérer le cas où la permission de localisation n'est pas accordée
+            requestLocationPermission()
         }
     }
 
-    private fun centerMapOnLocation(geoPoint: GeoPoint) {
-        mapController.setCenter(geoPoint)
-        mapController.setZoom(15.0)
-    }
+    private fun showMarkersFromDatabase() {
+        val markerDBHelper = MarkerDBHelper(requireContext())
+        val markersCursor = markerDBHelper.getAllMarkers()
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_LOCATION) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                // Permission granted, continue operations that require this permission
-                // Restart the fragment or execute location-related operations here
-            } else {
-                // Permission denied
-            }
+        while (markersCursor.moveToNext()) {
+            val latitude = markersCursor.getDouble(markersCursor.getColumnIndexOrThrow("latitude"))
+            val longitude = markersCursor.getDouble(markersCursor.getColumnIndexOrThrow("longitude"))
+            val sportName = markersCursor.getString(markersCursor.getColumnIndexOrThrow("sport"))
+
+            val geoPoint = GeoPoint(latitude, longitude)
+            val marker = Marker(mapViewJoinEvent)
+            marker.position = geoPoint
+            marker.title = sportName // Store the sport name in the marker's title
+
+            mapViewJoinEvent.overlays.add(marker)
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
-        mapView.overlays.remove(userMarker)
-        userMarker = null
+//        if (::mapView.isInitialized && userMarker != null) {
+//            mapView.overlays.remove(userMarker)
+//            userMarker = null
+//        }
     }
+
 }
