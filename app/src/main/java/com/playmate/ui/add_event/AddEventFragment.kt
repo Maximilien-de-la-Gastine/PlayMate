@@ -79,6 +79,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
         mapViewAddEvent.overlays.add(0, MapEventsOverlay(this))
 
+        centerMapOnUserLocation()
+
         return root
     }
 
@@ -91,6 +93,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_LOCATION) {
@@ -105,8 +108,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private fun showUserLocation() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
-                updateMapLocation(location)
+            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let {
             }
 
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this, Looper.getMainLooper())
@@ -119,33 +121,15 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         if (followUserLocation) {
             centerMapOnUserLocation()
         }
-        updateMapLocation(location)
     }
 
-
-    private var userMarker: Marker? = null
-    private fun updateMapLocation(location: Location) {
-        val userLocation = GeoPoint(location.latitude, location.longitude)
-
-        // Vérification de la nullité de mapView et userMarker
-        if (::mapViewAddEvent.isInitialized) {
-            if (userMarker == null) {
-                userMarker = Marker(mapViewAddEvent)
-                userMarker?.position = userLocation
-                userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                mapViewAddEvent.overlays.add(userMarker)
-            } else {
-                userMarker?.position = userLocation
-            }
-        }
-    }
 
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
         return false
     }
 
-    fun addMarker(geoPoint: GeoPoint) {
+    private fun addMarker(geoPoint: GeoPoint) {
         // Création du marqueur
         val marker = Marker(mapViewAddEvent)
         marker.position = geoPoint
@@ -166,7 +150,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
 
     // Call addMarker method when you add a marker
-    fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event) {
+    private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event) {
         val dbHelper = MarkerDBHelper(requireContext())
         val insertedId = dbHelper.addMarkerWithDetails(
             geoPoint.latitude,
@@ -463,13 +447,4 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             requestLocationPermission()
         }
     }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-//        if (::mapView.isInitialized && userMarker != null) {
-//            mapView.overlays.remove(userMarker)
-//            userMarker = null
-//        }
-    }
-
 }

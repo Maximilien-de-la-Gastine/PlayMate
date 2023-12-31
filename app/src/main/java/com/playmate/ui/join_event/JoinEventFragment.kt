@@ -29,6 +29,7 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import com.playmate.databinding.FragmentJoinEventBinding
 
+@Suppress("DEPRECATION")
 class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private var _binding: FragmentJoinEventBinding? = null
@@ -62,6 +63,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         mapViewJoinEvent.overlays.add(0, MapEventsOverlay(this))
 
         showMarkersFromDatabase()
+        centerMapOnUserLocation()
         singleTapConfirmedHelper(p = null)
 
         return root
@@ -76,6 +78,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_LOCATION) {
@@ -111,19 +114,18 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
 
     private var userMarker: Marker? = null
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun updateMapLocation(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
 
-        // Vérification de la nullité de mapView et userMarker
-        if (::mapViewJoinEvent.isInitialized) {
-            if (userMarker == null) {
-                userMarker = Marker(mapViewJoinEvent)
-                userMarker?.position = userLocation
-                userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                mapViewJoinEvent.overlays.add(userMarker)
-            } else {
-                userMarker?.position = userLocation
-            }
+        if (userMarker == null) {
+            userMarker = Marker(mapViewJoinEvent)
+            userMarker?.position = userLocation
+            userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            userMarker?.icon = requireContext().resources.getDrawable(R.drawable.baseline_run_circle_24)
+            mapViewJoinEvent.overlays.add(userMarker)
+        } else {
+            userMarker?.position = userLocation
         }
     }
 
@@ -215,13 +217,4 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             mapViewJoinEvent.overlays.add(marker)
         }
     }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-//        if (::mapView.isInitialized && userMarker != null) {
-//            mapView.overlays.remove(userMarker)
-//            userMarker = null
-//        }
-    }
-
 }
