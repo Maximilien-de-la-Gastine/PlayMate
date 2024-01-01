@@ -53,14 +53,20 @@ class LoginActivity : AppCompatActivity() {
             val newUsername = editTextNewUsername.text.toString()
             val newPassword = editTextNewPassword.text.toString()
 
-            // Assurez-vous que les champs ne sont pas vides avant l'enregistrement
             if (newUsername.isNotEmpty() && newPassword.isNotEmpty()) {
-                val isRegistered = userDBHelper.registerUser(newUsername, newPassword)
-                if (isRegistered) {
-                    showToast("Registration successful")
-                    // Vous pouvez effectuer une action après l'enregistrement, comme rediriger vers la connexion
+                // Vérifiez si l'utilisateur existe déjà dans la base de données
+                val isUserExists = userDBHelper.isUserExists(newUsername)
+
+                if (isUserExists) {
+                    showToast("Username already exists. Please choose another one.")
                 } else {
-                    showToast("Registration failed. Please try again.")
+                    val isRegistered = userDBHelper.registerUser(newUsername, newPassword)
+                    if (isRegistered) {
+                        showToast("Registration successful")
+                        // Redirigez l'utilisateur vers la connexion ou une autre activité si nécessaire
+                    } else {
+                        showToast("Registration failed. Please try again.")
+                    }
                 }
             } else {
                 showToast("Please fill in all fields")

@@ -40,26 +40,6 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return newRowId != -1L // Si l'insertion a réussi, newRowId est l'ID de la nouvelle ligne, sinon -1
     }
 
-    fun loginUser(username: String, password: String): Boolean {
-        val db = readableDatabase
-        val selection = "$COLUMN_USERNAME = ? AND $COLUMN_PASSWORD = ?"
-        val selectionArgs = arrayOf(username, password)
-
-        val cursor = db.query(
-            TABLE_NAME,
-            arrayOf(COLUMN_ID),
-            selection,
-            selectionArgs,
-            null,
-            null,
-            null
-        )
-
-        val isLoggedIn = cursor.count > 0
-        cursor.close()
-        return isLoggedIn
-    }
-
     fun isLoggedIn(username: String, password: String): Boolean {
         val db = this.readableDatabase
         val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_USERNAME = ? AND $COLUMN_PASSWORD = ?"
@@ -68,6 +48,15 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         val count = cursor.count
         cursor.close()
 
+        return count > 0
+    }
+
+    fun isUserExists(username: String): Boolean {
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_USERNAME = ?"
+        val cursor = db.rawQuery(query, arrayOf(username))
+        val count = cursor.count
+        cursor.close()
         return count > 0
     }
 }
