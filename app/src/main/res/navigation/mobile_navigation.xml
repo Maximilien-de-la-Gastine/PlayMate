@@ -5,6 +5,12 @@
     android:id="@+id/mobile_navigation"
     app:startDestination="@id/navigation_add_event">
 
+    <activity
+        android:id="@+id/navigation_login"
+        android:name="com.playmate.ui.authentication.LoginActivity"
+        android:label="Login"
+        tools:layout="@layout/activity_login" />
+
     <fragment
         android:id="@+id/navigation_add_event"
         android:name="com.playmate.ui.add_event.AddEventFragment"

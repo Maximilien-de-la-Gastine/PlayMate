@@ -123,6 +123,31 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
+    private fun centerMapOnUserLocation() {
+        val currentContext = context ?: return // Vérifie si le contexte est disponible
+
+        if (locationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(
+                    currentContext,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                location?.let {
+                    val userLocation = GeoPoint(it.latitude, it.longitude)
+                    mapViewAddEvent.controller.setCenter(userLocation)
+                    mapViewAddEvent.controller.setZoom(19.5)
+                    followUserLocation = true
+                }
+            } else {
+                // La permission n'est pas accordée, demandez-la à nouveau
+                requestLocationPermission()
+            }
+        } else {
+            // Gérer le cas où la permission de localisation n'est pas accordée
+            requestLocationPermission()
+        }
+    }
 
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
@@ -148,8 +173,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
 
-
-    // Call addMarker method when you add a marker
     private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event) {
         val dbHelper = MarkerDBHelper(requireContext())
         val insertedId = dbHelper.addMarkerWithDetails(
@@ -172,7 +195,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             // Gérer l'échec de l'insertion
         }
     }
-
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
@@ -343,62 +365,46 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Trouver la référence de la barre de recherche EditText
         val searchEditText = view.findViewById<AutoCompleteTextView>(R.id.searchBar)
         val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
-
-        // Créer un adaptateur pour les suggestions (vide pour le moment)
         val adapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_dropdown_item_1line)
         searchEditText.setAdapter(adapter)
 
-        // Ajouter un écouteur pour détecter le texte modifié
         searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
             override fun afterTextChanged(s: Editable?) {
                 val searchText = s.toString().trim()
-
-                // Appeler l'API pour récupérer les suggestions en fonction du texte actuel
                 getAutocompleteSuggestions(searchText, adapter)
             }
         })
 
-        // Ajouter un écouteur pour détecter l'action de recherche (IME_ACTION_SEARCH)
         searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val searchText = searchEditText.text.toString().trim()
                 if (searchText.isNotEmpty()) {
                     performSearch(searchText, this)
-
-                    // Fermez le clavier ici
-                    val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                     imm.hideSoftInputFromWindow(searchEditText.windowToken, 0)
-
                     return@setOnEditorActionListener true
                 }
             }
             false
         }
 
-
         val followButton = view.findViewById<Button>(R.id.centerButton)
         followButton.setOnClickListener {
-            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
             followUserLocation = true
-            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
+            centerMapOnUserLocation()
         }
 
         mapViewAddEvent.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_MOVE -> {
-                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
                     followUserLocation = false
                 }
             }
-            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
+            false
         }
     }
 
@@ -433,29 +439,5 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 // Gérer les échecs de requête ici
             }
         })
-    }
-
-    private fun centerMapOnUserLocation() {
-        if (locationPermissionGranted) {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                location?.let {
-                    val userLocation = GeoPoint(it.latitude, it.longitude)
-                    mapViewAddEvent.controller.setCenter(userLocation)
-                    mapViewAddEvent.controller.setZoom(19.5)
-                    followUserLocation = true
-                }
-            } else {
-                // La permission n'est pas accordée, demandez-la à nouveau
-                requestLocationPermission()
-            }
-        } else {
-            // Gérer le cas où la permission de localisation n'est pas accordée
-            requestLocationPermission()
-        }
     }
 }
