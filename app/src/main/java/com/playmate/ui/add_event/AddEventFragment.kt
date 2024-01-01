@@ -299,30 +299,33 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredEquipment = requiredEquipmentInput.text.toString()
             val requiredLevel = requiredLevelInput.selectedItem.toString()
 
-            // Création de l'objet Event avec les informations saisies
-            val event = Event(
-                eventName,
-                selectedSport,
-                date,
-                time,
-                duration.toIntOrNull() ?: 0,
-                maxPeople.toIntOrNull() ?: 0,
-                requiredEquipment,
-                requiredLevel,
-                geoPoint.latitude,
-                geoPoint.longitude
-            )
+            // Vérifier si des données valides ont été saisies
+            if (eventName.isNotBlank() && selectedSport != "Choisir un sport" && date.isNotBlank() &&
+                time.isNotBlank() && duration.isNotBlank() && maxPeople.isNotBlank() &&
+                requiredEquipment.isNotBlank() && requiredLevel != "Niveau requis"
+            ) {
+                val event = Event(
+                    eventName,
+                    selectedSport,
+                    date,
+                    time,
+                    duration.toIntOrNull() ?: 0,
+                    maxPeople.toIntOrNull() ?: 0,
+                    requiredEquipment,
+                    requiredLevel,
+                    geoPoint.latitude,
+                    geoPoint.longitude
+                )
 
-            addMarkerToDatabase(geoPoint, event)
+                addMarkerToDatabase(geoPoint, event)
+                addMarker(geoPoint)
+                followUserLocation = false
 
-            addMarker(geoPoint)
-
-            followUserLocation = false
-
-            // Affichage d'un Toast pour informer l'utilisateur que l'événement a été ajouté
-            Toast.makeText(requireContext(), "Événement ajouté : $eventName", Toast.LENGTH_SHORT).show()
-
-            dialog.dismiss()
+                Toast.makeText(requireContext(), "Événement ajouté : $eventName", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } else {
+                Toast.makeText(requireContext(), "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show()
+            }
         }
 
         builder.setNegativeButton("Annuler") { dialog, _ ->

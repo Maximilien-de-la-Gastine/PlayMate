@@ -197,7 +197,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val eventIdString = marker.snippet
         val idRegex = Regex("Id: (\\d+)") // Expression régulière pour obtenir l'ID
         val matchResult = idRegex.find(eventIdString ?: "")
-
+// EMPECHER UN UTILISATEUR DE S'INSCRIRE DEUX FOIS AU MEME EVENEMENT ---------------------------------------------------------
         matchResult?.let { result ->
             val eventId = result.groupValues[1].toLongOrNull()
             val maxPeopleRegex = Regex("Max People: (\\d+)") // Expression régulière pour obtenir le nombre maximum de participants
@@ -226,7 +226,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
 
     private fun showParticipantDialog(marker: Marker) {
-        val title = marker.title
+        val title = "Voulez-vous rejoindre la seance?"
         val snippet = marker.snippet
 
         AlertDialog.Builder(requireContext())
