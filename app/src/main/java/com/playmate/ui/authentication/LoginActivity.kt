@@ -24,52 +24,59 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        buttonLogin = findViewById(R.id.buttonLogin)
-        editTextUsername = findViewById(R.id.editTextUsername)
-        editTextPassword = findViewById(R.id.editTextPassword)
         userDBHelper = UserDBHelper(this)
 
-        buttonLogin.setOnClickListener {
-            val username = editTextUsername.text.toString()
-            val password = editTextPassword.text.toString()
-
-            if (userDBHelper.isLoggedIn(username, password)) {
-                showToast("Connexion réussie en tant que $username")
-                // Redirection vers l'écran suivant après la connexion réussie
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            } else {
-                showToast("Échec de la connexion. Veuillez vérifier vos informations.")
-            }
+        if(userDBHelper.isUserLoggedIn()){
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
         }
+        else{
+            buttonLogin = findViewById(R.id.buttonLogin)
+            editTextUsername = findViewById(R.id.editTextUsername)
+            editTextPassword = findViewById(R.id.editTextPassword)
+            buttonRegister = findViewById(R.id.buttonRegister)
+            editTextNewUsername = findViewById(R.id.editTextNewUsername)
+            editTextNewPassword = findViewById(R.id.editTextNewPassword)
 
-        buttonRegister = findViewById(R.id.buttonRegister)
-        editTextNewUsername = findViewById(R.id.editTextNewUsername)
-        editTextNewPassword = findViewById(R.id.editTextNewPassword)
-        userDBHelper = UserDBHelper(this)
+            buttonLogin.setOnClickListener {
+                val username = editTextUsername.text.toString()
+                val password = editTextPassword.text.toString()
 
-        buttonRegister.setOnClickListener {
-            val newUsername = editTextNewUsername.text.toString()
-            val newPassword = editTextNewPassword.text.toString()
-
-            if (newUsername.isNotEmpty() && newPassword.isNotEmpty()) {
-                // Vérifiez si l'utilisateur existe déjà dans la base de données
-                val isUserExists = userDBHelper.isUserExists(newUsername)
-
-                if (isUserExists) {
-                    showToast("Username already exists. Please choose another one.")
+                if (userDBHelper.isLoggedIn(username, password)) {
+                    showToast("Connexion réussie en tant que $username")
+                    userDBHelper.saveLoggedInUser(username)
+                    // Redirection vers l'écran suivant après la connexion réussie
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
                 } else {
-                    val isRegistered = userDBHelper.registerUser(newUsername, newPassword)
-                    if (isRegistered) {
-                        showToast("Registration successful")
-                        // Redirigez l'utilisateur vers la connexion ou une autre activité si nécessaire
-                    } else {
-                        showToast("Registration failed. Please try again.")
-                    }
+                    showToast("Échec de la connexion. Veuillez vérifier vos informations.")
                 }
-            } else {
-                showToast("Please fill in all fields")
+            }
+
+            buttonRegister.setOnClickListener {
+                val newUsername = editTextNewUsername.text.toString()
+                val newPassword = editTextNewPassword.text.toString()
+
+                if (newUsername.isNotEmpty() && newPassword.isNotEmpty()) {
+                    // Vérifiez si l'utilisateur existe déjà dans la base de données
+                    val isUserExists = userDBHelper.isUserExists(newUsername)
+
+                    if (isUserExists) {
+                        showToast("Username already exists. Please choose another one.")
+                    } else {
+                        val isRegistered = userDBHelper.registerUser(newUsername, newPassword)
+                        if (isRegistered) {
+                            showToast("Registration successful")
+                            // Redirigez l'utilisateur vers la connexion ou une autre activité si nécessaire
+                        } else {
+                            showToast("Registration failed. Please try again.")
+                        }
+                    }
+                } else {
+                    showToast("Please fill in all fields")
+                }
             }
         }
     }

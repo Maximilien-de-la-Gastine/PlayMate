@@ -14,6 +14,7 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         const val COLUMN_ID = "id"
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
+        const val TABLE_NAME_LOGGED_IN_USER = "logged_in_user"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -23,10 +24,17 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
                 "$COLUMN_PASSWORD TEXT" +
                 ")"
         db.execSQL(createTableQuery)
+
+        val createLoggedInUserTableQuery = "CREATE TABLE $TABLE_NAME_LOGGED_IN_USER (" +
+                "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_USERNAME TEXT" +
+                ")"
+        db.execSQL(createLoggedInUserTableQuery)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME_LOGGED_IN_USER")
         onCreate(db)
     }
 
@@ -59,4 +67,22 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         cursor.close()
         return count > 0
     }
+
+    fun saveLoggedInUser(username: String) {
+        val db = writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_USERNAME, username)
+        db.insert(TABLE_NAME_LOGGED_IN_USER, null, values)
+        db.close()
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME_LOGGED_IN_USER"
+        val cursor = db.rawQuery(query, null)
+        val isLoggedIn = cursor.count > 0
+        cursor.close()
+        return isLoggedIn
+    }
+
 }
