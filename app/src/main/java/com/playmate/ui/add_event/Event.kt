@@ -5,7 +5,7 @@ data class Event(
     val sport: String,
     val date: String,
     val time: String,
-    val duration: String,
+    val duration: Int,
     val maxPeople: Int,
     val requiredEquipment: String,
     val requiredLevel: String,

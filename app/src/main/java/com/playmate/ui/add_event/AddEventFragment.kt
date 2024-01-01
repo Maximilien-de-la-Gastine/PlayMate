@@ -156,8 +156,15 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             geoPoint.latitude,
             geoPoint.longitude,
             event.eventName,
-            event.sport
-            // ... Ajoutez d'autres détails du formulaire ici
+            event.sport,
+            event.date,
+            event.time,
+            event.duration,
+            event.maxPeople,
+            event.requiredEquipment,
+            event.requiredLevel,
+            participating = 1
+            // ... Ajoutez d'autres détails du formulaire ici si nécessaire
         )
         if (insertedId != -1L) {
             // Gérer l'insertion réussie
@@ -165,6 +172,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             // Gérer l'échec de l'insertion
         }
     }
+
 
     private fun showConfirmationDialog(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
@@ -297,7 +305,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 selectedSport,
                 date,
                 time,
-                duration,
+                duration.toIntOrNull() ?: 0,
                 maxPeople.toIntOrNull() ?: 0,
                 requiredEquipment,
                 requiredLevel,

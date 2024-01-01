@@ -2,6 +2,7 @@ package com.playmate.ui.join_event
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -9,6 +10,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -129,53 +131,6 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
-    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-        if (p != null) {
-            mapViewJoinEvent.overlays.filterIsInstance(Marker::class.java).forEach { marker ->
-                val markerPosition = marker.position
-                if (markerPosition != null && markerPosition == p) {
-                    // Marqueur touché, affichage du sport associé au marqueur
-                    val sportName = marker.title
-                    sportName?.let {
-                        Toast.makeText(requireContext(), "Sport: $it", Toast.LENGTH_SHORT).show()
-                    }
-                    return true
-                }
-            }
-        }
-        return false
-    }
-
-    override fun longPressHelper(p: GeoPoint?): Boolean {
-        return false
-    }
-
-
-    private var followUserLocation = false
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-
-        val followButton = view.findViewById<Button>(R.id.centerButton)
-        followButton.setOnClickListener {
-            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
-            followUserLocation = true
-            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
-        }
-
-        mapViewJoinEvent.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_MOVE -> {
-                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
-                    followUserLocation = false
-                }
-            }
-            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
-        }
-    }
-
     private fun centerMapOnUserLocation() {
         if (isAdded && locationPermissionGranted) {
             if (ContextCompat.checkSelfPermission(
@@ -205,16 +160,121 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val markersCursor = markerDBHelper.getAllMarkers()
 
         while (markersCursor.moveToNext()) {
+            val id = markersCursor.getDouble(markersCursor.getColumnIndexOrThrow("id"))
             val latitude = markersCursor.getDouble(markersCursor.getColumnIndexOrThrow("latitude"))
             val longitude = markersCursor.getDouble(markersCursor.getColumnIndexOrThrow("longitude"))
             val sportName = markersCursor.getString(markersCursor.getColumnIndexOrThrow("sport"))
+            val date = markersCursor.getString(markersCursor.getColumnIndexOrThrow("date"))
+            val time = markersCursor.getString(markersCursor.getColumnIndexOrThrow("time"))
+            val duration = markersCursor.getString(markersCursor.getColumnIndexOrThrow("duration"))
+            val maxPeople = markersCursor.getString(markersCursor.getColumnIndexOrThrow("max_people"))
+            val requiredEquipment = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_equipment"))
+            val requiredLevel = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_level"))
+            val participating = markersCursor.getString(markersCursor.getColumnIndexOrThrow("participating"))
 
             val geoPoint = GeoPoint(latitude, longitude)
             val marker = Marker(mapViewJoinEvent)
             marker.position = geoPoint
-            marker.title = sportName // Store the sport name in the marker's title
+
+            // Titre du marqueur avec le nom du sport
+            marker.title = sportName
+
+            // Description du marqueur avec les autres informations
+            val markerDescription = "Id: $id \nDate: $date\nTime: $time\nDuration: $duration\nMax People: $maxPeople\nEquipment: $requiredEquipment\nLevel: $requiredLevel\nNumber of participation: $participating"
+            marker.snippet = markerDescription
 
             mapViewJoinEvent.overlays.add(marker)
+
+            marker.setOnMarkerClickListener { _, _ ->
+                showParticipantDialog(marker)
+                true // Indiquer que le clic a été consommé
+            }
+        }
+    }
+
+
+    private fun addParticipantToEvent(marker: Marker) {
+        val eventIdString = marker.snippet
+        val idRegex = Regex("Id: (\\d+)") // Expression régulière pour obtenir l'ID
+        val matchResult = idRegex.find(eventIdString ?: "")
+
+        matchResult?.let { result ->
+            val eventId = result.groupValues[1].toLongOrNull()
+            val maxPeopleRegex = Regex("Max People: (\\d+)") // Expression régulière pour obtenir le nombre maximum de participants
+            val maxPeopleMatchResult = maxPeopleRegex.find(eventIdString ?: "")
+            val maxPeople = maxPeopleMatchResult?.groupValues?.get(1)?.toIntOrNull()
+
+            if (eventId != null && maxPeople != null) {
+                val markerDBHelper = MarkerDBHelper(requireContext())
+
+                // Récupérer le nombre de participants actuel pour cet événement
+                val currentParticipants = markerDBHelper.getNumberOfParticipants(eventId)
+
+                // Vérifier si le nombre de participants actuel est inférieur au nombre maximal
+                if (currentParticipants < maxPeople) {
+                    markerDBHelper.incrementParticipants(eventId)
+                    Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
+                    showMarkersFromDatabase()
+                } else {
+                    Toast.makeText(requireContext(), "Nombre maximal de participants atteint pour cet événement.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+
+
+    private fun showParticipantDialog(marker: Marker) {
+        val title = marker.title
+        val snippet = marker.snippet
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(title)
+            .setMessage(snippet)
+            .setPositiveButton("Oui") { dialog, _ ->
+                addParticipantToEvent(marker)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Annuler") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+        return false
+    }
+
+    override fun longPressHelper(p: GeoPoint?): Boolean {
+        return false
+    }
+
+
+
+
+    private var followUserLocation = false
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+        val followButton = view.findViewById<Button>(R.id.centerButton)
+        followButton.setOnClickListener {
+            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
+            followUserLocation = true
+            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
+        }
+
+        mapViewJoinEvent.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
+                    followUserLocation = false
+                }
+            }
+            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
         }
     }
 }
