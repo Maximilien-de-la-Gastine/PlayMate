@@ -255,6 +255,13 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return updated > 0
     }
 
+    fun deleteMarker(markerId: Double): Boolean {
+        val db = this.writableDatabase
+        val deletedRows = db.delete(TABLE_NAME, "$COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
+        return deletedRows > 0
+    }
+
+
 
 
 

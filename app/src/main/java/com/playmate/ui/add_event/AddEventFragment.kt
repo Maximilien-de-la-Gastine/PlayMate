@@ -159,7 +159,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         // Création du marqueur
         val marker = Marker(mapViewAddEvent)
         marker.position = geoPoint
-        marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
+//        marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
         // Ajout du marqueur à la carte
@@ -172,6 +172,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
+
+        displayUserMarkers()
+
+
     }
 
     private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userName: String) {
@@ -477,7 +481,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
                     val success = markerDBHelper.updateEvent(markerId, modifiedEvent)
                     if (success) {
-                        refreshMarkersOnMap()
+                        displayUserMarkers()
                         Toast.makeText(requireContext(), "Événement modifié avec succès", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(requireContext(), "Échec de la modification de l'événement", Toast.LENGTH_SHORT).show()
@@ -497,6 +501,21 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         alertDialogBuilder.setNegativeButton("Annuler") { dialog, _ ->
             dialog.dismiss()
         }
+
+        alertDialogBuilder.setNeutralButton("Supprimer l'événement") { dialog, _ ->
+            clickedMarkerId?.let { markerId ->
+                val success = markerDBHelper.deleteMarker(markerId)
+                if (success) {
+                    displayUserMarkers()
+                    refreshMarkersOnMap()
+                    Toast.makeText(requireContext(), "Événement supprimé avec succès", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "Échec de la suppression de l'événement", Toast.LENGTH_SHORT).show()
+                }
+            }
+            dialog.dismiss()
+        }
+
         alertDialogBuilder.show()
     }
 
