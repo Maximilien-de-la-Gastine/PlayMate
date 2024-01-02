@@ -159,7 +159,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         // Création du marqueur
         val marker = Marker(mapViewAddEvent)
         marker.position = geoPoint
-//        marker.title = "Nouvelle balise : $geoPoint" // Ajout des coordonnées dans le titre du marqueur
+
+        // Titre du marqueur avec le nom du sport
+        marker.title = "Nouvelle balise : ${geoPoint.latitude}, ${geoPoint.longitude}" // Ajout des coordonnées dans le titre du marqueur
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
         // Ajout du marqueur à la carte
@@ -173,10 +175,16 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
 
+        val dbHelper = DataBase(requireContext())
+        val eventId = dbHelper.getEventIdFromMarker(geoPoint)
+
+        val userId = dbHelper.getCurrentUserId()
+
+//        dbHelper.addUserToEvent(eventId, userId)
+
         displayUserMarkers()
-
-
     }
+
 
     private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userName: String) {
         val dbHelper = DataBase(requireContext())

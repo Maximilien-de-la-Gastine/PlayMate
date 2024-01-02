@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.playmate.ui.add_event.Event
+import org.osmdroid.util.GeoPoint
 
 class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -75,9 +76,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val createUserEventsTable = "CREATE TABLE $TABLE_USER_EVENT (" +
                 "$COLUMN_MARKER_ID INTEGER," +
                 "$COLUMN_USER_ID INTEGER," +
-                "$COLUMN_USERNAME TEXT," +
-                "FOREIGN KEY(marker_id) REFERENCES YourEventTable(marker_id)," +
-                "FOREIGN KEY(user_id) REFERENCES YourUserTable(marker_id)" +
+                "$COLUMN_USERNAME TEXT" +
                 ")"
 
         db.execSQL(createUserEventsTable)
@@ -87,6 +86,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_AUTH")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME_LOGGED_IN_USER")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_USER_EVENT")
         onCreate(db)
     }
 
@@ -134,6 +134,12 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_USER_NAME = ?"
         return db.rawQuery(query, arrayOf(userName))
     }
+
+    fun getMarkersByParticipant(userName: String): Cursor {
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_PARTICIPATING = 1 AND $COLUMN_USER_NAME = ?"
+        return db.rawQuery(query, arrayOf(userName))
+    }
     fun getCurrentUsername(): String {
         val db = readableDatabase
         var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
@@ -148,7 +154,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return username
     }
 
-    fun getCurrentParticipation(markerId: Double): Int {
+    fun getCurrentParticipation(markerId: Long): Int {
         val db = this.readableDatabase
         val query = "SELECT $COLUMN_PARTICIPATING FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?"
         val cursor = db.rawQuery(query, arrayOf(markerId.toString()))
@@ -164,39 +170,15 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return participation
     }
 
-    fun updateParticipation(markerId: Double, newParticipation: Int): Boolean {
+    fun incrementParticipants(markerId: Long) {
         val db = this.writableDatabase
-        val values = ContentValues()
-        values.put(COLUMN_PARTICIPATING, newParticipation)
+        val query = "UPDATE $TABLE_NAME SET $COLUMN_PARTICIPATING = $COLUMN_PARTICIPATING + 1 WHERE $COLUMN_MARKER_ID = ?"
 
-        val updatedRows = db.update(
-            TABLE_NAME,
-            values,
-            "$COLUMN_MARKER_ID = ?",
-            arrayOf(markerId.toString())
-        )
-
-        return updatedRows > 0
+        db.execSQL(query, arrayOf(markerId.toString()))
+        db.close()
     }
 
-    fun getMaxPeople(markerId: Double): Int {
-        val db = this.readableDatabase
-        var maxPeople = 0
-
-        val query = "SELECT $COLUMN_MAX_PEOPLE FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?"
-        val cursor = db.rawQuery(query, arrayOf(markerId.toString()))
-
-        cursor.use {
-            if (it.moveToFirst()) {
-                maxPeople = it.getInt(it.getColumnIndexOrThrow(COLUMN_MAX_PEOPLE))
-            }
-        }
-        cursor.close()
-
-        return maxPeople
-    }
-
-    fun getMarkerCreatorUsername(markerId: Double): String {
+    fun getMarkerCreatorUsername(markerId: Long): String {
         val db = this.readableDatabase
         var creatorUsername = ""
 
@@ -260,6 +242,59 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val deletedRows = db.delete(TABLE_NAME, "$COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
         return deletedRows > 0
     }
+
+    fun getEventIdFromMarker(geoPoint: GeoPoint): Int {
+        val db = this.readableDatabase
+        val query = "SELECT $COLUMN_MARKER_ID FROM $TABLE_NAME WHERE $COLUMN_LATITUDE = ? AND $COLUMN_LONGITUDE = ?"
+        val cursor = db.rawQuery(query, arrayOf(geoPoint.latitude.toString(), geoPoint.longitude.toString()))
+
+        var eventId = -1 // Valeur par défaut si l'ID de l'événement n'est pas trouvé
+        cursor.use {
+            if (it.moveToFirst()) {
+                eventId = it.getInt(it.getColumnIndexOrThrow(COLUMN_MARKER_ID))
+            }
+        }
+        cursor.close()
+        return eventId
+    }
+
+    fun getCurrentUserId(): Int {
+        val db = this.readableDatabase
+        var userId = -1 // Valeur par défaut si l'utilisateur n'est pas connecté
+
+        val cursor = db.rawQuery("SELECT $COLUMN_USER_ID FROM $TABLE_NAME_LOGGED_IN_USER", null)
+        cursor.use {
+            if (it.moveToFirst()) {
+                userId = it.getInt(it.getColumnIndexOrThrow(COLUMN_USER_ID))
+            }
+        }
+        cursor.close()
+        return userId
+    }
+
+    fun addUserToEvent(username: String, eventId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_USERNAME, username)
+        values.put(COLUMN_MARKER_ID, eventId)
+
+        val newRowId = db.insert(TABLE_USER_EVENT, null, values)
+        return newRowId != -1L
+    }
+
+    fun hasUserJoinedEvent(username: String, eventId: Long): Boolean {
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_USER_EVENT WHERE $COLUMN_USERNAME = ? AND $COLUMN_MARKER_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(username, eventId.toString()))
+
+        val count = cursor.count
+        cursor.close()
+        return count > 0
+    }
+
+
+
+
 
 
 
