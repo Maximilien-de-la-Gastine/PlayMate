@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.playmate.DataBase
 import com.playmate.databinding.FragmentHistoryBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class HistoryFragment : Fragment() {
 
@@ -29,6 +32,7 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         val recyclerView: RecyclerView = binding.recyclerViewEvents
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
@@ -45,7 +49,20 @@ class HistoryFragment : Fragment() {
         // Fusionner les deux listes si nécessaire
         val allEventsList = createdEventsList + participatingEventsList
 
-        val adapter = EventAdapter(allEventsList) // EventAdapter est votre adaptateur personnalisé
+        val currentCalendar = Calendar.getInstance()
+
+        // Filtrer les événements passés de la liste combinée
+        val filteredEventsList = allEventsList.filter { event ->
+            val eventCalendar = Calendar.getInstance().apply {
+                // Convertir la date et l'heure de l'événement en un objet Calendar
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                time = dateFormat.parse("${event.date} ${event.time}") // Concaténer date et heure
+            }
+            // Comparer avec la date et l'heure actuelles
+            eventCalendar.before(currentCalendar) // Garder les événements passés
+        }
+
+        val adapter = EventAdapter(filteredEventsList) // Utiliser la liste filtrée
         recyclerView.adapter = adapter
     }
 
