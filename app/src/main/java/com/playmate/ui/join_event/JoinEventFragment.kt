@@ -212,16 +212,22 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val markerDBHelper = MarkerDBHelper(requireContext())
         val userDBHelper = UserDBHelper(requireContext())
 
-        val maxPeople = markerMaxPeople[eventId] ?: 0 // Récupérer la valeur maximale depuis markerMaxPeople
+        val maxPeople = markerMaxPeople[eventId] ?: 0
         val currentParticipants = markerDBHelper.getNumberOfParticipants(eventId)
-        val markerCreator = markerDBHelper.getMarkerCreator(eventId) // Obtenez le créateur du marqueur
+        val markerCreator = markerDBHelper.getMarkerCreator(eventId)
 
         if (currentParticipants < maxPeople) {
-            // Vérifier si l'utilisateur actuel n'est pas le créateur du marqueur
             if (userDBHelper.getCurrentUsername() != markerCreator) {
-                markerDBHelper.incrementParticipants(eventId)
-                Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
-                showMarkersFromDatabase()
+                // Vérifie si l'utilisateur a déjà rejoint cet événement
+                val hasJoined = userDBHelper.hasUserJoinedEvent(currentUsername, eventId)
+                if (!hasJoined) {
+                    markerDBHelper.incrementParticipants(eventId)
+                    userDBHelper.addUserToEvent(currentUsername, eventId) // Enregistre la participation de l'utilisateur à l'événement
+                    Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
+                    showMarkersFromDatabase()
+                } else {
+                    Toast.makeText(requireContext(), "Vous avez déjà rejoint cet événement.", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Toast.makeText(requireContext(), "Vous ne pouvez pas vous inscrire à votre propre événement.", Toast.LENGTH_SHORT).show()
             }
@@ -229,6 +235,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             Toast.makeText(requireContext(), "Nombre maximal de participants atteint pour cet événement.", Toast.LENGTH_SHORT).show()
         }
     }
+
 
 
 

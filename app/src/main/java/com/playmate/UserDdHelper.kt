@@ -14,7 +14,11 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         const val COLUMN_ID = "id"
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
+
         const val TABLE_NAME_LOGGED_IN_USER = "logged_in_user"
+
+        const val TABLE_NAME_USER_EVENTS = "user_events"
+        const val COLUMN_EVENT_ID = "event_id"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -30,11 +34,19 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
                 "$COLUMN_USERNAME TEXT" +
                 ")"
         db.execSQL(createLoggedInUserTableQuery)
+
+        val createUserEventsTableQuery = "CREATE TABLE $TABLE_NAME_USER_EVENTS (" +
+                "$COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_USERNAME TEXT," +
+                "$COLUMN_EVENT_ID INTEGER" +
+                ")"
+        db.execSQL(createUserEventsTableQuery)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME_LOGGED_IN_USER")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME_USER_EVENTS")
         onCreate(db)
     }
 
@@ -97,6 +109,26 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         }
         cursor.close()
         return username
+    }
+
+    fun addUserToEvent(username: String, eventId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_USERNAME, username)
+        values.put(COLUMN_EVENT_ID, eventId)
+
+        val newRowId = db.insert(TABLE_NAME_USER_EVENTS, null, values)
+        return newRowId != -1L
+    }
+
+    fun hasUserJoinedEvent(username: String, eventId: Long): Boolean {
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME_USER_EVENTS WHERE $COLUMN_USERNAME = ? AND $COLUMN_EVENT_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(username, eventId.toString()))
+
+        val count = cursor.count
+        cursor.close()
+        return count > 0
     }
 
 
