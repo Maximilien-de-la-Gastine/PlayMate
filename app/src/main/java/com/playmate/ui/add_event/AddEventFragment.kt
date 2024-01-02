@@ -286,7 +286,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
-                val selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear" // +1 car les mois commencent à 0
+                val selectedDate = String.format("%02d/%02d/%d", selectedDay, selectedMonth + 1, selectedYear)
                 dateInput.text = selectedDate
             },
             year,
