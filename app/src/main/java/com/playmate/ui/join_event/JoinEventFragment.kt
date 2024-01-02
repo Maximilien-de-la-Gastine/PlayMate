@@ -182,6 +182,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
             // Description du marqueur avec les autres informations
             val markerDescription =
+                    "Id: $id\n" +
                     "Createur: $userName \n" +
                     "Date: $date\n" +
                     "Time: $time\n" +
@@ -196,7 +197,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
             marker.setOnMarkerClickListener { _, _ ->
                 showParticipantDialog(marker)
-                true // Indiquer que le clic a été consommé
+                true
             }
         }
     }
