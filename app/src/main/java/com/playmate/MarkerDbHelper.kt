@@ -121,6 +121,21 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return count
     }
 
+    fun getMarkerCreator(eventId: Long): String {
+        val db = this.readableDatabase
+        var markerCreator = ""
 
+        val query = "SELECT $COLUMN_USER_NAME FROM $TABLE_NAME WHERE $COLUMN_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(eventId.toString()))
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                markerCreator = it.getString(it.getColumnIndexOrThrow(COLUMN_USER_NAME))
+            }
+        }
+
+        cursor.close()
+        return markerCreator
+    }
 }
 

@@ -10,7 +10,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -22,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.playmate.MarkerDBHelper
 import com.playmate.R
+import com.playmate.UserDBHelper
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -155,6 +155,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         }
     }
 
+    val markerIdMap = mutableMapOf<Marker, Long>()
+    val markerMaxPeople = mutableMapOf<Long, Int>()
     private fun showMarkersFromDatabase() {
         val markerDBHelper = MarkerDBHelper(requireContext())
         val markersCursor = markerDBHelper.getAllMarkers()
@@ -178,11 +180,14 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             marker.position = geoPoint
 
             // Titre du marqueur avec le nom du sport
-            marker.title = sportName
+            marker.title = "Voulez-vous rejoindre cette session de $sportName"
+
+            val maxPeopleValue = maxPeople.toInt()
+            markerIdMap[marker] = id.toLong()
+            markerMaxPeople[id.toLong()] = maxPeopleValue
 
             // Description du marqueur avec les autres informations
             val markerDescription =
-                    "Id: $id\n" +
                     "Createur: $userName \n" +
                     "Date: $date\n" +
                     "Time: $time\n" +
@@ -203,47 +208,49 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
 
-    private fun addParticipantToEvent(marker: Marker) {
-        val eventIdString = marker.snippet
-        val idRegex = Regex("Id: (\\d+)") // Expression régulière pour obtenir l'ID
-        val matchResult = idRegex.find(eventIdString ?: "")
-// EMPECHER UN UTILISATEUR DE S'INSCRIRE DEUX FOIS AU MEME EVENEMENT ---------------------------------------------------------
-        matchResult?.let { result ->
-            val eventId = result.groupValues[1].toLongOrNull()
-            val maxPeopleRegex = Regex("Max People: (\\d+)") // Expression régulière pour obtenir le nombre maximum de participants
-            val maxPeopleMatchResult = maxPeopleRegex.find(eventIdString ?: "")
-            val maxPeople = maxPeopleMatchResult?.groupValues?.get(1)?.toIntOrNull()
+    private fun addParticipantToEvent(eventId: Long, currentUsername: String) {
+        val markerDBHelper = MarkerDBHelper(requireContext())
+        val userDBHelper = UserDBHelper(requireContext())
 
-            if (eventId != null && maxPeople != null) {
-                val markerDBHelper = MarkerDBHelper(requireContext())
+        val maxPeople = markerMaxPeople[eventId] ?: 0 // Récupérer la valeur maximale depuis markerMaxPeople
+        val currentParticipants = markerDBHelper.getNumberOfParticipants(eventId)
+        val markerCreator = markerDBHelper.getMarkerCreator(eventId) // Obtenez le créateur du marqueur
 
-                // Récupérer le nombre de participants actuel pour cet événement
-                val currentParticipants = markerDBHelper.getNumberOfParticipants(eventId)
-
-                // Vérifier si le nombre de participants actuel est inférieur au nombre maximal
-                if (currentParticipants < maxPeople) {
-                    markerDBHelper.incrementParticipants(eventId)
-                    Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
-                    showMarkersFromDatabase()
-                } else {
-                    Toast.makeText(requireContext(), "Nombre maximal de participants atteint pour cet événement.", Toast.LENGTH_SHORT).show()
-                }
+        if (currentParticipants < maxPeople) {
+            // Vérifier si l'utilisateur actuel n'est pas le créateur du marqueur
+            if (userDBHelper.getCurrentUsername() != markerCreator) {
+                markerDBHelper.incrementParticipants(eventId)
+                Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
+                showMarkersFromDatabase()
+            } else {
+                Toast.makeText(requireContext(), "Vous ne pouvez pas vous inscrire à votre propre événement.", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(requireContext(), "Nombre maximal de participants atteint pour cet événement.", Toast.LENGTH_SHORT).show()
         }
     }
 
 
 
 
+
     private fun showParticipantDialog(marker: Marker) {
-        val title = "Voulez-vous rejoindre la seance de " + marker.title
-        val snippet = marker.snippet
+        val eventId = markerIdMap[marker]
 
         AlertDialog.Builder(requireContext())
-            .setTitle(title)
-            .setMessage(snippet)
+            .setTitle(marker.title)
+            .setMessage(marker.snippet)
             .setPositiveButton("Oui") { dialog, _ ->
-                addParticipantToEvent(marker)
+                eventId?.let { eventId ->
+                    val userDBHelper = UserDBHelper(requireContext())
+                    val currentUsername = userDBHelper.getCurrentUsername()
+                        if (currentUsername.isNotEmpty()) {
+                            addParticipantToEvent(eventId, currentUsername)
+                        } else {
+                            // Gérer le cas où le nom d'utilisateur actuel n'est pas disponible
+                            Toast.makeText(requireContext(), "Nom d'utilisateur introuvable.", Toast.LENGTH_SHORT).show()
+                        }
+                }
                 dialog.dismiss()
             }
             .setNegativeButton("Annuler") { dialog, _ ->
@@ -251,6 +258,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             }
             .show()
     }
+
+
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         return false
