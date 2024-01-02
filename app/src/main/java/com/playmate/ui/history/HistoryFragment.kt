@@ -6,15 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import com.playmate.MarkerDBHelper
 import com.playmate.databinding.FragmentHistoryBinding
 
 class HistoryFragment : Fragment() {
 
     private var _binding: FragmentHistoryBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -22,17 +19,46 @@ class HistoryFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val notificationsViewModel =
-            ViewModelProvider(this).get(HistoryViewModel::class.java)
-
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val textView: TextView = binding.textHistory
-        notificationsViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+
+        // Récupérer les informations des marqueurs depuis la base de données
+        val dbHelper = MarkerDBHelper(requireContext())
+        val markerCursor = dbHelper.getAllMarkers()
+
+        // Créer une chaîne pour stocker les informations des marqueurs
+        val markerInfo = StringBuilder()
+
+        // Parcourir le curseur pour récupérer les informations des marqueurs
+        markerCursor.use { cursor ->
+            while (cursor.moveToNext()) {
+                val markerId = cursor.getLong(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_ID))
+                val latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_LATITUDE))
+                val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_LONGITUDE))
+                val eventName = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_EVENT_NAME))
+                val sport = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_SPORT))
+                val userId = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_USER_ID))
+                // ... Autres champs que vous souhaitez récupérer
+
+                // Ajouter les informations du marqueur à la chaîne de texte
+                markerInfo.append("Marker ID: $markerId\n")
+                markerInfo.append("Event Name: $eventName\n")
+                markerInfo.append("Sport: $sport\n")
+                markerInfo.append("User ID: $userId\n")
+                // ... Ajouter d'autres informations si nécessaire
+                markerInfo.append("\n") // Ajouter une séparation entre les marqueurs
+            }
         }
-        return root
+
+        // Afficher les informations des marqueurs dans le TextView
+        textView.text = markerInfo.toString()
     }
 
     override fun onDestroyView() {

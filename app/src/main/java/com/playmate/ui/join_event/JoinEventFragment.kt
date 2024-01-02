@@ -171,6 +171,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredEquipment = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_equipment"))
             val requiredLevel = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_level"))
             val participating = markersCursor.getString(markersCursor.getColumnIndexOrThrow("participating"))
+            val userId = markersCursor.getString(markersCursor.getColumnIndexOrThrow("user_id"))
 
             val geoPoint = GeoPoint(latitude, longitude)
             val marker = Marker(mapViewJoinEvent)
@@ -180,7 +181,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             marker.title = sportName
 
             // Description du marqueur avec les autres informations
-            val markerDescription = "Id: $id \nDate: $date\nTime: $time\nDuration: $duration\nMax People: $maxPeople\nEquipment: $requiredEquipment\nLevel: $requiredLevel\nNumber of participation: $participating"
+            val markerDescription = "Id: $id \nUser id: $userId \nDate: $date\nTime: $time\nDuration: $duration\nMax People: $maxPeople\nEquipment: $requiredEquipment\nLevel: $requiredLevel\nNumber of participation: $participating"
             marker.snippet = markerDescription
 
             mapViewJoinEvent.overlays.add(marker)
@@ -226,7 +227,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
 
     private fun showParticipantDialog(marker: Marker) {
-        val title = "Voulez-vous rejoindre la seance?"
+        val title = "Voulez-vous rejoindre la seance de " + marker.title
         val snippet = marker.snippet
 
         AlertDialog.Builder(requireContext())

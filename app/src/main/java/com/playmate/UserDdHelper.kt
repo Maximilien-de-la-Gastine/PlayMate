@@ -85,4 +85,19 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return isLoggedIn
     }
 
+    fun getCurrentUserID(): Long {
+        val db = readableDatabase
+        var userID: Long = -1 // Valeur par défaut si l'ID n'est pas trouvé
+
+        val cursor = db.rawQuery("SELECT $COLUMN_ID FROM $TABLE_NAME_LOGGED_IN_USER", null)
+        cursor.use {
+            if (it.moveToFirst()) {
+                userID = it.getLong(it.getColumnIndexOrThrow(COLUMN_ID))
+            }
+        }
+        cursor.close()
+        return userID
+    }
+
+
 }

@@ -25,6 +25,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COLUMN_REQUIRED_EQUIPMENT = "required_equipment"
         const val COLUMN_REQUIRED_LEVEL = "required_level"
         const val COLUMN_PARTICIPATING = "participating"
+        const val COLUMN_USER_ID = "user_id"
         // ... Add more columns for other details in the form
     }
 
@@ -41,8 +42,10 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "$COLUMN_MAX_PEOPLE INTEGER," +
                 "$COLUMN_REQUIRED_EQUIPMENT TEXT," +
                 "$COLUMN_REQUIRED_LEVEL TEXT," +
-                "$COLUMN_PARTICIPATING INTEGER DEFAULT 0" +
+                "$COLUMN_PARTICIPATING INTEGER DEFAULT 0," +
+                "$COLUMN_USER_ID INTEGER" + // Nouvelle colonne pour l'ID de l'utilisateur
                 ")"
+
         db.execSQL(createTableQuery)
     }
 
@@ -62,7 +65,8 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         maxPeople: Int,
         requiredEquipment: String,
         requiredLevel: String,
-        participating: Int
+        participating: Int,
+        userId: Long
         // ... Add parameters for other details from the form
     ): Long {
         val values = ContentValues()
@@ -77,6 +81,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         values.put(COLUMN_REQUIRED_EQUIPMENT, requiredEquipment)
         values.put(COLUMN_REQUIRED_LEVEL, requiredLevel)
         values.put(COLUMN_PARTICIPATING, participating)
+        values.put(COLUMN_USER_ID, userId)
         // ... Put other details into ContentValues
 
         val db = this.writableDatabase

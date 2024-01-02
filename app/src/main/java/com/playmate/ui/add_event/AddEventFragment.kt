@@ -46,6 +46,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import android.widget.AutoCompleteTextView
 import com.playmate.MarkerDBHelper
+import com.playmate.UserDBHelper
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -173,7 +174,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
 
-    private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event) {
+    private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userId: Long) {
         val dbHelper = MarkerDBHelper(requireContext())
         val insertedId = dbHelper.addMarkerWithDetails(
             geoPoint.latitude,
@@ -186,8 +187,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             event.maxPeople,
             event.requiredEquipment,
             event.requiredLevel,
-            participating = 1
-            // ... Ajoutez d'autres détails du formulaire ici si nécessaire
+            participating = 1,
+            userId = userId
         )
         if (insertedId != -1L) {
             // Gérer l'insertion réussie
@@ -321,6 +322,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredEquipment = requiredEquipmentInput.text.toString()
             val requiredLevel = requiredLevelInput.selectedItem.toString()
 
+            val userDBHelper = UserDBHelper(requireContext())
+            val userID = userDBHelper.getCurrentUserID()
+
             // Vérifier si des données valides ont été saisies
             if (eventName.isNotBlank() && selectedSport != "Choisir un sport" && date.isNotBlank() &&
                 time.isNotBlank() && duration.isNotBlank() && maxPeople.isNotBlank() &&
@@ -339,7 +343,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     geoPoint.longitude
                 )
 
-                addMarkerToDatabase(geoPoint, event)
+                addMarkerToDatabase(geoPoint, event, userID)
                 addMarker(geoPoint)
                 followUserLocation = false
 
@@ -357,7 +361,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val dialog = builder.create()
         dialog.show()
     }
-
 
     private var followUserLocation = false
 
