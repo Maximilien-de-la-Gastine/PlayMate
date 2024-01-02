@@ -8,8 +8,6 @@ data class Event(
     val duration: Int,
     val maxPeople: Int,
     val requiredEquipment: String,
-    val requiredLevel: String,
-    val latitude: Double,
-    val longitude: Double
+    val requiredLevel: String
 )
 

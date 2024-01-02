@@ -175,13 +175,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
 
-        val dbHelper = DataBase(requireContext())
-        val eventId = dbHelper.getEventIdFromMarker(geoPoint)
-
-        val userId = dbHelper.getCurrentUserId()
-
-//        dbHelper.addUserToEvent(eventId, userId)
-
         displayUserMarkers()
     }
 
@@ -231,6 +224,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         return true
     }
 
+    @SuppressLint("MissingInflatedId")
     fun showAddEventForm(geoPoint: GeoPoint) {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Ajouter un événement")
@@ -247,8 +241,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
         val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
         val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
-        val latitudeInput = view.findViewById<EditText>(R.id.latitudeInput)
-        val longitudeInput = view.findViewById<EditText>(R.id.longitudeInput)
+        val addressTextView = view.findViewById<TextView>(R.id.addressInput)
+
 
         // Options de sports disponibles
         val sports = arrayOf("Choisir un sport", "Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
@@ -271,11 +265,40 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         requiredLevelInput.setSelection(0, false)
         requiredLevelInput.prompt = "Choisir le niveau"
 
-        // Remplir les champs de latitude et longitude (non modifiables)
-        latitudeInput.setText(geoPoint.latitude.toString())
-        longitudeInput.setText(geoPoint.longitude.toString())
-        latitudeInput.isEnabled = false
-        longitudeInput.isEnabled = false
+        //pour l'adresse
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://nominatim.openstreetmap.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(NominatimService::class.java)
+        val call = service.searchPlace("${geoPoint.latitude},${geoPoint.longitude}")
+
+        call.enqueue(object : Callback<NominatimResponse> {
+            override fun onResponse(
+                call: Call<NominatimResponse>,
+                response: Response<NominatimResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val places = response.body()
+                    if (!places.isNullOrEmpty()) {
+                        val place = places[0]
+                        val address = place.display_name
+
+                        // Afficher l'adresse dans le champ TextView (non modifiable)
+                        addressTextView.text = address
+                    } else {
+                        // Gérer le cas où aucun résultat n'a été trouvé pour ces coordonnées
+                    }
+                } else {
+                    // Gérer les erreurs de réponse ici
+                }
+            }
+
+            override fun onFailure(call: Call<NominatimResponse>, t: Throwable) {
+                // Gérer les échecs de requête ici
+            }
+        })
 
         // Sélection de la date avec DatePicker
         val calendar = Calendar.getInstance()
@@ -344,9 +367,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     duration.toIntOrNull() ?: 0,
                     maxPeople.toIntOrNull() ?: 0,
                     requiredEquipment,
-                    requiredLevel,
-                    geoPoint.latitude,
-                    geoPoint.longitude
+                    requiredLevel
                 )
 
                 addMarkerToDatabase(geoPoint, event, userName)
@@ -449,8 +470,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
                 val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
                 val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
-                val latitudeInput = view.findViewById<EditText>(R.id.latitudeInput)
-                val longitudeInput = view.findViewById<EditText>(R.id.longitudeInput)
 
                 val sports = arrayOf("Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
                 val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sports)
@@ -470,8 +489,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 maxPeopleInput.setText(eventDetails.maxPeople.toString())
                 requiredEquipmentInput.setText(eventDetails.requiredEquipment)
                 requiredLevelInput.setSelection(getLevelIndex(eventDetails.requiredLevel)) // Function to get index of level in spinner
-                latitudeInput.setText(eventDetails.latitude.toString())
-                longitudeInput.setText(eventDetails.longitude.toString())
 
                 builder.setPositiveButton("Enregistrer") { dialog, _ ->
                     val modifiedEvent = Event(
@@ -482,9 +499,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         durationInput.text.toString().toIntOrNull() ?: 0,
                         maxPeopleInput.text.toString().toIntOrNull() ?: 0,
                         requiredEquipmentInput.text.toString(),
-                        requiredLevelInput.selectedItem.toString(),
-                        latitudeInput.text.toString().toDouble(),
-                        longitudeInput.text.toString().toDouble()
+                        requiredLevelInput.selectedItem.toString()
                     )
 
                     val success = markerDBHelper.updateEvent(markerId, modifiedEvent)

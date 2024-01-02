@@ -199,7 +199,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val db = this.readableDatabase
         val eventDetails = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
 
-        var event = Event("", "", "", "", 0, 0, "", "", 0.0, 0.0)
+        var event = Event("", "", "", "", 0, 0, "", "")
         if (eventDetails.moveToFirst()) {
             val eventName = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_EVENT_NAME))
             val sport = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_SPORT))
@@ -209,10 +209,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
             val maxPeople = eventDetails.getInt(eventDetails.getColumnIndexOrThrow(COLUMN_MAX_PEOPLE))
             val requiredEquipment = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_EQUIPMENT))
             val requiredLevel = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_LEVEL))
-            val latitude = eventDetails.getDouble(eventDetails.getColumnIndexOrThrow(COLUMN_LATITUDE))
-            val longitude = eventDetails.getDouble(eventDetails.getColumnIndexOrThrow(COLUMN_LONGITUDE))
 
-            event = Event(eventName, sport, date, time, duration, maxPeople, requiredEquipment, requiredLevel, latitude, longitude)
+            event = Event(eventName, sport, date, time, duration, maxPeople, requiredEquipment, requiredLevel)
         }
 
         eventDetails.close()
@@ -230,8 +228,6 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         contentValues.put("max_people", event.maxPeople)
         contentValues.put("required_equipment", event.requiredEquipment)
         contentValues.put("required_level", event.requiredLevel)
-        contentValues.put("latitude", event.latitude)
-        contentValues.put("longitude", event.longitude)
 
         val updated = db.update(TABLE_NAME, contentValues, "$COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
         return updated > 0

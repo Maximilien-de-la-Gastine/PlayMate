@@ -63,14 +63,7 @@
             android:hint="Niveau requis" />
 
         <EditText
-            android:id="@+id/latitudeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Latitude"
-            android:enabled="false" />
-
-        <EditText
-            android:id="@+id/longitudeInput"
+            android:id="@+id/addressInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Longitude"
