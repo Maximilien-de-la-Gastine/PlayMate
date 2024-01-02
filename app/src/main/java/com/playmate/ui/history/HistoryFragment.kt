@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.playmate.DataBase
 import com.playmate.databinding.FragmentHistoryBinding
 
@@ -27,28 +29,30 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val textView: TextView = binding.textHistory
-        val dbHelper = DataBase(requireContext())
-        val markerInfo = StringBuilder()
+        val recyclerView: RecyclerView = binding.recyclerViewEvents
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        val dbHelper = DataBase(requireContext())
         val currentUserName = dbHelper.getCurrentUsername()
 
-        // Récupérer les événements créés par l'utilisateur actuel
         val createdEventsCursor = dbHelper.getMarkersByUsername(currentUserName)
-        markerInfo.append("Événements créés par $currentUserName :\n\n")
-        markerInfo.append(getEventInfoFromCursor(createdEventsCursor))
-
-        // Récupérer les événements auxquels l'utilisateur participe
         val participatingEventsCursor = dbHelper.getMarkersByParticipant(currentUserName)
-        markerInfo.append("\n\nÉvénements auxquels participe $currentUserName :\n\n")
-        markerInfo.append(getEventInfoFromCursor(participatingEventsCursor))
 
-        textView.text = markerInfo.toString()
+        // Créer une liste d'événements en fonction des curseurs obtenus
+        val createdEventsList = createEventListFromCursor(createdEventsCursor)
+        val participatingEventsList = createEventListFromCursor(participatingEventsCursor)
+
+        // Fusionner les deux listes si nécessaire
+        val allEventsList = createdEventsList + participatingEventsList
+
+        val adapter = EventAdapter(allEventsList) // EventAdapter est votre adaptateur personnalisé
+        recyclerView.adapter = adapter
     }
 
     // Fonction pour obtenir les informations sur les événements à partir du curseur
-    private fun getEventInfoFromCursor(cursor: Cursor): String {
-        val markerInfo = StringBuilder()
+    private fun createEventListFromCursor(cursor: Cursor): List<EventList> {
+        val eventList = mutableListOf<EventList>()
+
         cursor.use { cursor ->
             while (cursor.moveToNext()) {
                 val sport = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_SPORT))
@@ -60,19 +64,24 @@ class HistoryFragment : Fragment() {
                 val requiredLevel = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_LEVEL))
                 val participating = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_PARTICIPATING))
 
-                markerInfo.append("Date: $date\n")
-                markerInfo.append("Sport: $sport\n")
-                markerInfo.append("L'heure: $time\n")
-                markerInfo.append("Duree: $duration h\n")
-                markerInfo.append("Nombre de personne maximum: $maxPeople\n")
-                markerInfo.append("Equipement necessaire: $requiredEquipment\n")
-                markerInfo.append("Niveau demande: $requiredLevel\n")
-                markerInfo.append("Nombre de personne qui sont venues: $participating\n")
-                markerInfo.append("\n")
+                val event = EventList(
+                    sport = sport,
+                    date = date,
+                    time = time,
+                    duration = duration,
+                    maxPeople = maxPeople,
+                    requiredEquipment = requiredEquipment,
+                    requiredLevel = requiredLevel,
+                    participating = participating
+                )
+
+                eventList.add(event)
             }
         }
-        return markerInfo.toString()
+
+        return eventList
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
