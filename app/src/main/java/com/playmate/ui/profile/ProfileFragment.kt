@@ -11,7 +11,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.playmate.R
-import com.playmate.UserDBHelper
+import com.playmate.DataBase
 import com.playmate.databinding.FragmentProfileBinding
 import com.playmate.ui.authentication.LoginActivity
 
@@ -43,7 +43,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun logoutUser() {
-        val userDBHelper = UserDBHelper(requireContext())
+        val userDBHelper = DataBase(requireContext())
         userDBHelper.clearLoggedInUser()
 
         // Redirection vers l'écran de connexion (LoginActivity)

@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.playmate.MainActivity
 import com.playmate.R
-import com.playmate.UserDBHelper
+import com.playmate.DataBase
 
 class LoginActivity : AppCompatActivity() {
 
@@ -18,13 +18,13 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var editTextPassword: EditText
     private lateinit var editTextNewUsername: EditText
     private lateinit var editTextNewPassword: EditText
-    private lateinit var userDBHelper: UserDBHelper
+    private lateinit var userDBHelper: DataBase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        userDBHelper = UserDBHelper(this)
+        userDBHelper = DataBase (this)
 
         if(userDBHelper.isUserLoggedIn()){
             val intent = Intent(this, MainActivity::class.java)

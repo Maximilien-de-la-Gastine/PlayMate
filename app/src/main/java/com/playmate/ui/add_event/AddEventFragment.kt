@@ -45,8 +45,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import android.widget.AutoCompleteTextView
-import com.playmate.MarkerDBHelper
-import com.playmate.UserDBHelper
+import com.playmate.DataBase
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -175,7 +174,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userName: String) {
-        val dbHelper = MarkerDBHelper(requireContext())
+        val dbHelper = DataBase(requireContext())
         val insertedId = dbHelper.addMarkerWithDetails(
             geoPoint.latitude,
             geoPoint.longitude,
@@ -203,14 +202,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         builder.setMessage("Voulez-vous ajouter une balise à cet emplacement ?")
 
         builder.setPositiveButton("Oui") { dialog, which ->
-            // Code à exécuter si l'utilisateur confirme (par exemple, ouvrir le formulaire d'ajout)
-            // Ici, vous pouvez lancer une autre activité ou fragment pour le formulaire
-            // Utilisez geoPoint pour obtenir les coordonnées du clic sur la carte
             showAddEventForm(geoPoint)
         }
 
         builder.setNegativeButton("Non") { dialog, which ->
-            // Code à exécuter si l'utilisateur annule
         }
 
         builder.show()
@@ -227,12 +222,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Ajouter un événement")
 
-        // Création du layout pour le formulaire
         val inflater = LayoutInflater.from(requireContext())
         val view = inflater.inflate(R.layout.add_event_form, null)
         builder.setView(view)
 
-        // Déclaration des vues du formulaire
         val eventNameInput = view.findViewById<EditText>(R.id.eventNameInput)
         val sportInput = view.findViewById<Spinner>(R.id.sportInput)
         val dateInput = view.findViewById<TextView>(R.id.dateInput)
@@ -322,7 +315,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredEquipment = requiredEquipmentInput.text.toString()
             val requiredLevel = requiredLevelInput.selectedItem.toString()
 
-            val userDBHelper = UserDBHelper(requireContext())
+            val userDBHelper = DataBase(requireContext())
             val userName = userDBHelper.getCurrentUsername()
 
             // Vérifier si des données valides ont été saisies
@@ -363,14 +356,14 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun displayUserMarkers() {
-        val userDBHelper = UserDBHelper(requireContext())
+        val userDBHelper = DataBase(requireContext())
         val userName = userDBHelper.getCurrentUsername()
 
-        val dbHelper = MarkerDBHelper(requireContext())
+        val dbHelper = DataBase(requireContext())
         val userMarkers = dbHelper.getMarkersByUsername(userName)
 
         while (userMarkers.moveToNext()) {
-            val id = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("id"))
+            val markerId = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("marker_id"))
             val latitude = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("latitude"))
             val longitude = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("longitude"))
             val sportName = userMarkers.getString(userMarkers.getColumnIndexOrThrow("sport"))
