@@ -46,6 +46,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import android.widget.AutoCompleteTextView
 import com.playmate.DataBase
+import java.util.logging.Level
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -355,6 +356,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         dialog.show()
     }
 
+    private val markerIdMap = HashMap<Marker, Double>()
     private fun displayUserMarkers() {
         val userDBHelper = DataBase(requireContext())
         val userName = userDBHelper.getCurrentUsername()
@@ -381,7 +383,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             marker.position = geoPoint
 
             // Titre du marqueur avec le nom du sport
-            marker.title = sportName
+            marker.title = "Votre seance de $sportName"
+
+            markerIdMap[marker] = markerId
 
             // Description du marqueur avec les autres informations
             val markerDescription =
@@ -395,9 +399,125 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         "Number of participation: $participating"
             marker.snippet = markerDescription
 
+            marker.setOnMarkerClickListener { _, _ ->
+                showParticipantDialog(marker)
+                true
+            }
+
             mapViewAddEvent.overlays.add(marker)
         }
     }
+
+    private fun showParticipantDialog(marker: Marker) {
+        val title = marker.title
+        val snippet = marker.snippet
+        val clickedMarkerId = markerIdMap[marker]
+
+        val markerDBHelper = DataBase(requireContext())
+
+        val alertDialogBuilder = android.app.AlertDialog.Builder(requireContext())
+        alertDialogBuilder.setTitle(title)
+        alertDialogBuilder.setMessage(snippet)
+        alertDialogBuilder.setPositiveButton("Modifier votre événement") { dialog, _ ->
+            clickedMarkerId?.let { markerId ->
+                val eventDetails = markerDBHelper.getEventDetails(markerId)
+
+                val builder = AlertDialog.Builder(requireContext())
+                builder.setTitle("Modifier l'événement")
+
+                val inflater = LayoutInflater.from(requireContext())
+                val view = inflater.inflate(R.layout.add_event_form, null)
+                builder.setView(view)
+
+                val eventNameInput = view.findViewById<EditText>(R.id.eventNameInput)
+                val sportInput = view.findViewById<Spinner>(R.id.sportInput)
+                val dateInput = view.findViewById<TextView>(R.id.dateInput)
+                val timeInput = view.findViewById<TextView>(R.id.hourInput)
+                val durationInput = view.findViewById<EditText>(R.id.durationInput)
+                val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
+                val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
+                val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
+                val latitudeInput = view.findViewById<EditText>(R.id.latitudeInput)
+                val longitudeInput = view.findViewById<EditText>(R.id.longitudeInput)
+
+                val sports = arrayOf("Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
+                val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sports)
+                sportAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                sportInput.adapter = sportAdapter
+
+                val level = arrayOf("Tous les niveaux", "Débutant", "Intermediaire", "Elevé")
+                val requiredLevelAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, level)
+                requiredLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                requiredLevelInput.adapter = requiredLevelAdapter
+
+                eventNameInput.setText(eventDetails.eventName)
+                sportInput.setSelection(getSportIndex(eventDetails.sport)) // Function to get index of sport in spinner
+                dateInput.text = eventDetails.date
+                timeInput.text = eventDetails.time
+                durationInput.setText(eventDetails.duration.toString())
+                maxPeopleInput.setText(eventDetails.maxPeople.toString())
+                requiredEquipmentInput.setText(eventDetails.requiredEquipment)
+                requiredLevelInput.setSelection(getLevelIndex(eventDetails.requiredLevel)) // Function to get index of level in spinner
+                latitudeInput.setText(eventDetails.latitude.toString())
+                longitudeInput.setText(eventDetails.longitude.toString())
+
+                builder.setPositiveButton("Enregistrer") { dialog, _ ->
+                    val modifiedEvent = Event(
+                        eventNameInput.text.toString(),
+                        sportInput.selectedItem.toString(),
+                        dateInput.text.toString(),
+                        timeInput.text.toString(),
+                        durationInput.text.toString().toIntOrNull() ?: 0,
+                        maxPeopleInput.text.toString().toIntOrNull() ?: 0,
+                        requiredEquipmentInput.text.toString(),
+                        requiredLevelInput.selectedItem.toString(),
+                        latitudeInput.text.toString().toDouble(),
+                        longitudeInput.text.toString().toDouble()
+                    )
+
+                    val success = markerDBHelper.updateEvent(markerId, modifiedEvent)
+                    if (success) {
+                        refreshMarkersOnMap()
+                        Toast.makeText(requireContext(), "Événement modifié avec succès", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Échec de la modification de l'événement", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                builder.setNegativeButton("Annuler") { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                val modifyDialog = builder.create()
+                modifyDialog.show()
+            }
+            dialog.dismiss()
+        }
+
+        alertDialogBuilder.setNegativeButton("Annuler") { dialog, _ ->
+            dialog.dismiss()
+        }
+        alertDialogBuilder.show()
+    }
+
+    private fun getSportIndex(sport: String): Int {
+        val sportsArray = arrayOf("Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
+        return sportsArray.indexOf(sport)
+    }
+    private fun getLevelIndex(level: String): Int {
+        val levelsArray = arrayOf("Tous les niveaux", "Débutant", "Intermediaire", "Elevé")
+        return levelsArray.indexOf(level)
+    }
+
+    private fun refreshMarkersOnMap() {
+        mapViewAddEvent.overlays.clear()
+        displayUserMarkers()
+    }
+
+
+
+
+
 
 
     private var followUserLocation = false

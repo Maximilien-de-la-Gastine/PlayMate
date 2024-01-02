@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.playmate.ui.add_event.Event
 
 class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -210,6 +211,48 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         cursor.close()
 
         return creatorUsername
+    }
+
+    fun getEventDetails(markerId: Double): Event {
+        val db = this.readableDatabase
+        val eventDetails = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
+
+        var event = Event("", "", "", "", 0, 0, "", "", 0.0, 0.0)
+        if (eventDetails.moveToFirst()) {
+            val eventName = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_EVENT_NAME))
+            val sport = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_SPORT))
+            val date = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_DATE))
+            val time = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_TIME))
+            val duration = eventDetails.getInt(eventDetails.getColumnIndexOrThrow(COLUMN_DURATION))
+            val maxPeople = eventDetails.getInt(eventDetails.getColumnIndexOrThrow(COLUMN_MAX_PEOPLE))
+            val requiredEquipment = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_EQUIPMENT))
+            val requiredLevel = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_LEVEL))
+            val latitude = eventDetails.getDouble(eventDetails.getColumnIndexOrThrow(COLUMN_LATITUDE))
+            val longitude = eventDetails.getDouble(eventDetails.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+
+            event = Event(eventName, sport, date, time, duration, maxPeople, requiredEquipment, requiredLevel, latitude, longitude)
+        }
+
+        eventDetails.close()
+        return event
+    }
+
+    fun updateEvent(markerId: Double, event: Event): Boolean {
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put("event_name", event.eventName)
+        contentValues.put("sport", event.sport)
+        contentValues.put("date", event.date)
+        contentValues.put("time", event.time)
+        contentValues.put("duration", event.duration)
+        contentValues.put("max_people", event.maxPeople)
+        contentValues.put("required_equipment", event.requiredEquipment)
+        contentValues.put("required_level", event.requiredLevel)
+        contentValues.put("latitude", event.latitude)
+        contentValues.put("longitude", event.longitude)
+
+        val updated = db.update(TABLE_NAME, contentValues, "$COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
+        return updated > 0
     }
 
 
