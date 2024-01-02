@@ -174,7 +174,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
     }
 
-    private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userId: Long) {
+    private fun addMarkerToDatabase(geoPoint: GeoPoint, event: Event, userName: String) {
         val dbHelper = MarkerDBHelper(requireContext())
         val insertedId = dbHelper.addMarkerWithDetails(
             geoPoint.latitude,
@@ -188,7 +188,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             event.requiredEquipment,
             event.requiredLevel,
             participating = 1,
-            userId = userId
+            userName = userName
         )
         if (insertedId != -1L) {
             // Gérer l'insertion réussie
@@ -323,7 +323,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredLevel = requiredLevelInput.selectedItem.toString()
 
             val userDBHelper = UserDBHelper(requireContext())
-            val userID = userDBHelper.getCurrentUserID()
+            val userName = userDBHelper.getCurrentUsername()
 
             // Vérifier si des données valides ont été saisies
             if (eventName.isNotBlank() && selectedSport != "Choisir un sport" && date.isNotBlank() &&
@@ -343,7 +343,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     geoPoint.longitude
                 )
 
-                addMarkerToDatabase(geoPoint, event, userID)
+                addMarkerToDatabase(geoPoint, event, userName)
                 addMarker(geoPoint)
                 followUserLocation = false
 
@@ -361,6 +361,51 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val dialog = builder.create()
         dialog.show()
     }
+
+    private fun displayUserMarkers() {
+        val userDBHelper = UserDBHelper(requireContext())
+        val userName = userDBHelper.getCurrentUsername()
+
+        val dbHelper = MarkerDBHelper(requireContext())
+        val userMarkers = dbHelper.getMarkersByUsername(userName)
+
+        while (userMarkers.moveToNext()) {
+            val id = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("id"))
+            val latitude = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("latitude"))
+            val longitude = userMarkers.getDouble(userMarkers.getColumnIndexOrThrow("longitude"))
+            val sportName = userMarkers.getString(userMarkers.getColumnIndexOrThrow("sport"))
+            val date = userMarkers.getString(userMarkers.getColumnIndexOrThrow("date"))
+            val time = userMarkers.getString(userMarkers.getColumnIndexOrThrow("time"))
+            val duration = userMarkers.getString(userMarkers.getColumnIndexOrThrow("duration"))
+            val maxPeople = userMarkers.getString(userMarkers.getColumnIndexOrThrow("max_people"))
+            val requiredEquipment = userMarkers.getString(userMarkers.getColumnIndexOrThrow("required_equipment"))
+            val requiredLevel = userMarkers.getString(userMarkers.getColumnIndexOrThrow("required_level"))
+            val participating = userMarkers.getString(userMarkers.getColumnIndexOrThrow("participating"))
+            val userName = userMarkers.getString(userMarkers.getColumnIndexOrThrow("user_name"))
+
+            val geoPoint = GeoPoint(latitude, longitude)
+            val marker = Marker(mapViewAddEvent)
+            marker.position = geoPoint
+
+            // Titre du marqueur avec le nom du sport
+            marker.title = sportName
+
+            // Description du marqueur avec les autres informations
+            val markerDescription =
+                "Createur: $userName \n" +
+                        "Date: $date\n" +
+                        "Time: $time\n" +
+                        "Duration: $duration\n" +
+                        "Max People: $maxPeople\n" +
+                        "Equipment: $requiredEquipment\n" +
+                        "Level: $requiredLevel\n" +
+                        "Number of participation: $participating"
+            marker.snippet = markerDescription
+
+            mapViewAddEvent.overlays.add(marker)
+        }
+    }
+
 
     private var followUserLocation = false
 
@@ -409,6 +454,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             }
             false
         }
+
+        displayUserMarkers()
     }
 
     private fun getAutocompleteSuggestions(query: String, adapter: ArrayAdapter<String>) {

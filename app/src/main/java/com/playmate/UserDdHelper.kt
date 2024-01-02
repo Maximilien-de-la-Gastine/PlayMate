@@ -85,19 +85,20 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return isLoggedIn
     }
 
-    fun getCurrentUserID(): Long {
+    fun getCurrentUsername(): String {
         val db = readableDatabase
-        var userID: Long = -1 // Valeur par défaut si l'ID n'est pas trouvé
+        var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
 
-        val cursor = db.rawQuery("SELECT $COLUMN_ID FROM $TABLE_NAME_LOGGED_IN_USER", null)
+        val cursor = db.rawQuery("SELECT $COLUMN_USERNAME FROM $TABLE_NAME_LOGGED_IN_USER", null)
         cursor.use {
             if (it.moveToFirst()) {
-                userID = it.getLong(it.getColumnIndexOrThrow(COLUMN_ID))
+                username = it.getString(it.getColumnIndexOrThrow(COLUMN_USERNAME))
             }
         }
         cursor.close()
-        return userID
+        return username
     }
+
 
 
 }

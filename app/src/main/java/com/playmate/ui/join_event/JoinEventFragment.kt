@@ -171,7 +171,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredEquipment = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_equipment"))
             val requiredLevel = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_level"))
             val participating = markersCursor.getString(markersCursor.getColumnIndexOrThrow("participating"))
-            val userId = markersCursor.getString(markersCursor.getColumnIndexOrThrow("user_id"))
+            val userName = markersCursor.getString(markersCursor.getColumnIndexOrThrow("user_name"))
 
             val geoPoint = GeoPoint(latitude, longitude)
             val marker = Marker(mapViewJoinEvent)
@@ -181,7 +181,15 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             marker.title = sportName
 
             // Description du marqueur avec les autres informations
-            val markerDescription = "Id: $id \nUser id: $userId \nDate: $date\nTime: $time\nDuration: $duration\nMax People: $maxPeople\nEquipment: $requiredEquipment\nLevel: $requiredLevel\nNumber of participation: $participating"
+            val markerDescription =
+                    "Createur: $userName \n" +
+                    "Date: $date\n" +
+                    "Time: $time\n" +
+                    "Duration: $duration\n" +
+                    "Max People: $maxPeople\n" +
+                    "Equipment: $requiredEquipment\n" +
+                    "Level: $requiredLevel\n" +
+                    "Number of participation: $participating"
             marker.snippet = markerDescription
 
             mapViewJoinEvent.overlays.add(marker)

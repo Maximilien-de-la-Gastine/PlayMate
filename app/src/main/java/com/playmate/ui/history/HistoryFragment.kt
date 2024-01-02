@@ -44,14 +44,14 @@ class HistoryFragment : Fragment() {
                 val longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_LONGITUDE))
                 val eventName = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_EVENT_NAME))
                 val sport = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_SPORT))
-                val userId = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_USER_ID))
+                val userName = cursor.getString(cursor.getColumnIndexOrThrow(MarkerDBHelper.COLUMN_USER_NAME))
                 // ... Autres champs que vous souhaitez récupérer
 
                 // Ajouter les informations du marqueur à la chaîne de texte
                 markerInfo.append("Marker ID: $markerId\n")
                 markerInfo.append("Event Name: $eventName\n")
                 markerInfo.append("Sport: $sport\n")
-                markerInfo.append("User ID: $userId\n")
+                markerInfo.append("User ID: $userName\n")
                 // ... Ajouter d'autres informations si nécessaire
                 markerInfo.append("\n") // Ajouter une séparation entre les marqueurs
             }

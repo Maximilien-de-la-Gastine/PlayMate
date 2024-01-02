@@ -25,7 +25,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COLUMN_REQUIRED_EQUIPMENT = "required_equipment"
         const val COLUMN_REQUIRED_LEVEL = "required_level"
         const val COLUMN_PARTICIPATING = "participating"
-        const val COLUMN_USER_ID = "user_id"
+        const val COLUMN_USER_NAME = "user_name"
         // ... Add more columns for other details in the form
     }
 
@@ -43,7 +43,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 "$COLUMN_REQUIRED_EQUIPMENT TEXT," +
                 "$COLUMN_REQUIRED_LEVEL TEXT," +
                 "$COLUMN_PARTICIPATING INTEGER DEFAULT 0," +
-                "$COLUMN_USER_ID INTEGER" + // Nouvelle colonne pour l'ID de l'utilisateur
+                "$COLUMN_USER_NAME TEXT" +
                 ")"
 
         db.execSQL(createTableQuery)
@@ -66,7 +66,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         requiredEquipment: String,
         requiredLevel: String,
         participating: Int,
-        userId: Long
+        userName: String
         // ... Add parameters for other details from the form
     ): Long {
         val values = ContentValues()
@@ -81,7 +81,7 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         values.put(COLUMN_REQUIRED_EQUIPMENT, requiredEquipment)
         values.put(COLUMN_REQUIRED_LEVEL, requiredLevel)
         values.put(COLUMN_PARTICIPATING, participating)
-        values.put(COLUMN_USER_ID, userId)
+        values.put(COLUMN_USER_NAME, userName)
         // ... Put other details into ContentValues
 
         val db = this.writableDatabase
@@ -91,6 +91,12 @@ class MarkerDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun getAllMarkers(): Cursor {
         val db = this.readableDatabase
         return db.rawQuery("SELECT * FROM $TABLE_NAME", null)
+    }
+
+    fun getMarkersByUsername(userName: String): Cursor {
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_USER_NAME = ?"
+        return db.rawQuery(query, arrayOf(userName))
     }
 
     fun incrementParticipants(eventId: Long) {
