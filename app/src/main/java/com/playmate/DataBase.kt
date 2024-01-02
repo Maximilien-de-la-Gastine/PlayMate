@@ -137,7 +137,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
     fun getMarkersByParticipant(userName: String): Cursor {
         val db = this.readableDatabase
-        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_PARTICIPATING = 1 AND $COLUMN_USER_NAME = ?"
+        val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID IN (SELECT $COLUMN_MARKER_ID FROM $TABLE_USER_EVENT WHERE $COLUMN_USERNAME = ?)"
         return db.rawQuery(query, arrayOf(userName))
     }
     fun getCurrentUsername(): String {
@@ -291,13 +291,6 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         cursor.close()
         return count > 0
     }
-
-
-
-
-
-
-
 
 
 

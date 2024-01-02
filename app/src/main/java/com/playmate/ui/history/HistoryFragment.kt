@@ -51,16 +51,23 @@ class HistoryFragment : Fragment() {
         val markerInfo = StringBuilder()
         cursor.use { cursor ->
             while (cursor.moveToNext()) {
-                val markerId = cursor.getLong(cursor.getColumnIndexOrThrow(DataBase.COLUMN_MARKER_ID))
-                val eventName = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_EVENT_NAME))
                 val sport = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_SPORT))
-                val userName = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_USER_NAME))
-                // ... Autres champs que vous souhaitez récupérer
+                val date = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_DATE))
+                val time = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_TIME))
+                val duration = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_DURATION))
+                val maxPeople = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_MAX_PEOPLE))
+                val requiredEquipment = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_EQUIPMENT))
+                val requiredLevel = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_LEVEL))
+                val participating = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_PARTICIPATING))
 
-                markerInfo.append("Marker ID: $markerId\n")
-                markerInfo.append("Event Name: $eventName\n")
+                markerInfo.append("Date: $date\n")
                 markerInfo.append("Sport: $sport\n")
-                markerInfo.append("User ID: $userName\n")
+                markerInfo.append("L'heure: $time\n")
+                markerInfo.append("Duree: $duration h\n")
+                markerInfo.append("Nombre de personne maximum: $maxPeople\n")
+                markerInfo.append("Equipement necessaire: $requiredEquipment\n")
+                markerInfo.append("Niveau demande: $requiredLevel\n")
+                markerInfo.append("Nombre de personne qui sont venues: $participating\n")
                 markerInfo.append("\n")
             }
         }
