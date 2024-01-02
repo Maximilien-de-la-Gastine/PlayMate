@@ -153,6 +153,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             requestLocationPermission()
         }
     }
+
+    private val markerIdMap = HashMap<Marker, Double>()
     private fun showMarkersFromDatabase() {
         val markerDBHelper = DataBase(requireContext())
         val markersCursor = markerDBHelper.getAllMarkers()
@@ -178,6 +180,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             // Titre du marqueur avec le nom du sport
             marker.title = "Voulez-vous rejoindre cette session de $sportName"
 
+            markerIdMap[marker] = markerId
+
             // Description du marqueur avec les autres informations
             val markerDescription =
                     "Createur: $userName \n" +
@@ -190,9 +194,72 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     "Number of participation: $participating"
             marker.snippet = markerDescription
 
+
+            marker.setOnMarkerClickListener { _, _ ->
+                showParticipantDialog(marker)
+                true
+            }
+
             mapViewJoinEvent.overlays.add(marker)
+
         }
     }
+
+    private fun showParticipantDialog(marker: Marker) {
+        val title = marker.title
+        val snippet = marker.snippet
+        val clickedMarkerId = markerIdMap[marker]
+
+        val markerDBHelper = DataBase(requireContext())
+
+        val currentUsername = markerDBHelper.getCurrentUsername() // Obtient le nom d'utilisateur actuellement connecté
+        val markerCreatorUsername = markerDBHelper.getMarkerCreatorUsername(clickedMarkerId ?: 0.0) // Obtient le nom d'utilisateur du créateur de l'événement
+
+        if (currentUsername == markerCreatorUsername) {
+            // L'utilisateur connecté est le créateur de l'événement, afficher un message approprié
+            Toast.makeText(requireContext(), "Vous ne pouvez pas vous ajouter à votre propre événement", Toast.LENGTH_SHORT).show()
+        } else {
+            // Continuer avec le processus d'ajout d'utilisateur à l'événement
+            val maxParticipants = markerDBHelper.getMaxPeople(clickedMarkerId ?: 0.0) // Récupérer le nombre maximal de participants pour le marqueur
+
+            AlertDialog.Builder(requireContext())
+                .setTitle(title)
+                .setMessage(snippet)
+                .setPositiveButton("Oui") { dialog, _ ->
+                    clickedMarkerId?.let { markerId ->
+                        val currentParticipation = markerDBHelper.getCurrentParticipation(markerId)
+                        if (currentParticipation < maxParticipants) { // Vérifier si le nombre maximal n'est pas atteint
+                            updateParticipation(markerId)
+                            showMarkersFromDatabase()
+                            Toast.makeText(requireContext(), "Vous êtes ajouté", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Nombre maximum de participants atteint", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Annuler") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+        }
+    }
+
+
+
+    private fun updateParticipation(markerId: Double) {
+        val markerDBHelper = DataBase(requireContext())
+
+        // Retrieve the current participation count for the marker
+        val currentParticipation = markerDBHelper.getCurrentParticipation(markerId)
+
+        // Increment the participation count by 1
+        val updatedParticipation = currentParticipation + 1
+
+        // Update the participation count in the database
+        markerDBHelper.updateParticipation(markerId, updatedParticipation)
+    }
+
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         return false

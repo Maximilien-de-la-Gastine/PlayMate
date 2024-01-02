@@ -133,7 +133,90 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_USER_NAME = ?"
         return db.rawQuery(query, arrayOf(userName))
     }
+    fun getCurrentUsername(): String {
+        val db = readableDatabase
+        var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
 
+        val cursor = db.rawQuery("SELECT $COLUMN_USERNAME FROM $TABLE_NAME_LOGGED_IN_USER", null)
+        cursor.use {
+            if (it.moveToFirst()) {
+                username = it.getString(it.getColumnIndexOrThrow(COLUMN_USERNAME))
+            }
+        }
+        cursor.close()
+        return username
+    }
+
+    fun getCurrentParticipation(markerId: Double): Int {
+        val db = this.readableDatabase
+        val query = "SELECT $COLUMN_PARTICIPATING FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(markerId.toString()))
+
+        var participation = 0
+        cursor.use {
+            if (it.moveToFirst()) {
+                participation = it.getInt(it.getColumnIndexOrThrow(COLUMN_PARTICIPATING))
+            }
+        }
+        cursor.close()
+
+        return participation
+    }
+
+    fun updateParticipation(markerId: Double, newParticipation: Int): Boolean {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_PARTICIPATING, newParticipation)
+
+        val updatedRows = db.update(
+            TABLE_NAME,
+            values,
+            "$COLUMN_MARKER_ID = ?",
+            arrayOf(markerId.toString())
+        )
+
+        return updatedRows > 0
+    }
+
+    fun getMaxPeople(markerId: Double): Int {
+        val db = this.readableDatabase
+        var maxPeople = 0
+
+        val query = "SELECT $COLUMN_MAX_PEOPLE FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(markerId.toString()))
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                maxPeople = it.getInt(it.getColumnIndexOrThrow(COLUMN_MAX_PEOPLE))
+            }
+        }
+        cursor.close()
+
+        return maxPeople
+    }
+
+    fun getMarkerCreatorUsername(markerId: Double): String {
+        val db = this.readableDatabase
+        var creatorUsername = ""
+
+        val query = "SELECT $COLUMN_USER_NAME FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?"
+        val cursor = db.rawQuery(query, arrayOf(markerId.toString()))
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                creatorUsername = it.getString(it.getColumnIndexOrThrow(COLUMN_USER_NAME))
+            }
+        }
+        cursor.close()
+
+        return creatorUsername
+    }
+
+
+
+
+
+    //------------------------------------CONNECTION---------------------------------------------------------
     fun registerUser(username: String, password: String): Boolean {
         val db = writableDatabase
         val values = ContentValues()
@@ -185,20 +268,6 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val db = writableDatabase
         db.delete(TABLE_NAME_LOGGED_IN_USER, null, null)
         db.close()
-    }
-
-    fun getCurrentUsername(): String {
-        val db = readableDatabase
-        var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
-
-        val cursor = db.rawQuery("SELECT $COLUMN_USERNAME FROM $TABLE_NAME_LOGGED_IN_USER", null)
-        cursor.use {
-            if (it.moveToFirst()) {
-                username = it.getString(it.getColumnIndexOrThrow(COLUMN_USERNAME))
-            }
-        }
-        cursor.close()
-        return username
     }
 }
 
