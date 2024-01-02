@@ -69,7 +69,6 @@ class LoginActivity : AppCompatActivity() {
                         val isRegistered = userDBHelper.registerUser(newUsername, newPassword)
                         if (isRegistered) {
                             showToast("Registration successful")
-                            // Redirigez l'utilisateur vers la connexion ou une autre activité si nécessaire
                         } else {
                             showToast("Registration failed. Please try again.")
                         }

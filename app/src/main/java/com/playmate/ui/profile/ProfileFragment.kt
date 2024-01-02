@@ -1,13 +1,19 @@
 package com.playmate.ui.profile
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.playmate.R
+import com.playmate.UserDBHelper
 import com.playmate.databinding.FragmentProfileBinding
+import com.playmate.ui.authentication.LoginActivity
 
 class ProfileFragment : Fragment() {
 
@@ -28,11 +34,23 @@ class ProfileFragment : Fragment() {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textProfile
-        dashboardViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        val logoutButton: Button = binding.root.findViewById(R.id.logout_button)
+        logoutButton.setOnClickListener {
+            // Déconnexion de l'utilisateur
+            logoutUser()
         }
         return root
+    }
+
+    private fun logoutUser() {
+        val userDBHelper = UserDBHelper(requireContext())
+        userDBHelper.clearLoggedInUser()
+
+        // Redirection vers l'écran de connexion (LoginActivity)
+        val intent = Intent(requireActivity(), LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     override fun onDestroyView() {

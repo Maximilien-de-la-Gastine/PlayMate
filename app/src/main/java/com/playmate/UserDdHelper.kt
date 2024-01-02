@@ -97,6 +97,12 @@ class UserDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, 
         return isLoggedIn
     }
 
+    fun clearLoggedInUser() {
+        val db = writableDatabase
+        db.delete(TABLE_NAME_LOGGED_IN_USER, null, null)
+        db.close()
+    }
+
     fun getCurrentUsername(): String {
         val db = readableDatabase
         var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
