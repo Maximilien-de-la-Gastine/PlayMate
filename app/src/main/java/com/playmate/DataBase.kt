@@ -13,6 +13,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     companion object {
         const val DATABASE_VERSION = 1
         const val DATABASE_NAME = "MarkerDatabase.db"
+        //1ere Table
         const val TABLE_NAME = "markers"
         const val COLUMN_MARKER_ID = "marker_id"
         const val COLUMN_LATITUDE = "latitude"
@@ -27,14 +28,18 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         const val COLUMN_REQUIRED_LEVEL = "required_level"
         const val COLUMN_PARTICIPATING = "participating"
         const val COLUMN_USER_NAME = "user_name"
+        const val COLUMN_ADDRESS = "address"
 
+        //2eme Table
         const val TABLE_AUTH = "users"
         const val COLUMN_USER_ID = "user_id"
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
 
+        //3eme Table
         const val TABLE_NAME_LOGGED_IN_USER = "logged_in_user"
 
+        //4eme Table
         const val TABLE_USER_EVENT = "user_event"
 
 
@@ -55,7 +60,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 "$COLUMN_REQUIRED_EQUIPMENT TEXT," +
                 "$COLUMN_REQUIRED_LEVEL TEXT," +
                 "$COLUMN_PARTICIPATING INTEGER DEFAULT 0," +
-                "$COLUMN_USER_NAME TEXT" +
+                "$COLUMN_USER_NAME TEXT," +
+                "$COLUMN_ADDRESS TEXT" +
                 ")"
 
         db.execSQL(createTableQuery)
@@ -102,8 +108,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         requiredEquipment: String,
         requiredLevel: String,
         participating: Int,
-        userName: String
-        // ... Add parameters for other details from the form
+        userName: String,
+        address: String
     ): Long {
         val values = ContentValues()
         values.put(COLUMN_LATITUDE, latitude)
@@ -118,7 +124,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         values.put(COLUMN_REQUIRED_LEVEL, requiredLevel)
         values.put(COLUMN_PARTICIPATING, participating)
         values.put(COLUMN_USER_NAME, userName)
-        // ... Put other details into ContentValues
+        values.put(COLUMN_ADDRESS, address)
+
 
         val db = this.writableDatabase
         return db.insert(TABLE_NAME, null, values)
@@ -199,7 +206,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val db = this.readableDatabase
         val eventDetails = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
 
-        var event = Event("", "", "", "", 0, 0, "", "")
+        var event = Event("", "", "", "", 0, 0, "", "", "")
         if (eventDetails.moveToFirst()) {
             val eventName = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_EVENT_NAME))
             val sport = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_SPORT))
@@ -209,8 +216,9 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
             val maxPeople = eventDetails.getInt(eventDetails.getColumnIndexOrThrow(COLUMN_MAX_PEOPLE))
             val requiredEquipment = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_EQUIPMENT))
             val requiredLevel = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_REQUIRED_LEVEL))
+            val address = eventDetails.getString(eventDetails.getColumnIndexOrThrow(COLUMN_ADDRESS))
 
-            event = Event(eventName, sport, date, time, duration, maxPeople, requiredEquipment, requiredLevel)
+            event = Event(eventName, sport, date, time, duration, maxPeople, requiredEquipment, requiredLevel, address)
         }
 
         eventDetails.close()
@@ -228,6 +236,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         contentValues.put("max_people", event.maxPeople)
         contentValues.put("required_equipment", event.requiredEquipment)
         contentValues.put("required_level", event.requiredLevel)
+        contentValues.put("address", event.address)
 
         val updated = db.update(TABLE_NAME, contentValues, "$COLUMN_MARKER_ID = ?", arrayOf(markerId.toString()))
         return updated > 0

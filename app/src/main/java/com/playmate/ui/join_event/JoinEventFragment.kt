@@ -174,6 +174,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val requiredLevel = markersCursor.getString(markersCursor.getColumnIndexOrThrow("required_level"))
             val participating = markersCursor.getString(markersCursor.getColumnIndexOrThrow("participating"))
             val userName = markersCursor.getString(markersCursor.getColumnIndexOrThrow("user_name"))
+            val address = markersCursor.getString(markersCursor.getColumnIndexOrThrow("address"))
 
             val geoPoint = GeoPoint(latitude, longitude)
             val marker = Marker(mapViewJoinEvent)
@@ -196,7 +197,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     "Max People: $maxPeople\n" +
                     "Equipment: $requiredEquipment\n" +
                     "Level: $requiredLevel\n" +
-                    "Number of participation: $participating"
+                    "Number of participation: $participating\n" +
+                    "Addresse: $address"
             marker.snippet = markerDescription
 
 

@@ -24,6 +24,7 @@ class EventAdapter(private val eventList: List<EventList>) :
         val textEventRequiredEquipement: TextView = itemView.findViewById(R.id.text_event_required_equipement)
         val textEventRequiredLevel: TextView = itemView.findViewById(R.id.text_event_required_level)
         val textEventParticipating: TextView = itemView.findViewById(R.id.text_event_participating)
+        val textEventAddress: TextView = itemView.findViewById(R.id.text_event_address)
 
     }
 
@@ -40,14 +41,15 @@ class EventAdapter(private val eventList: List<EventList>) :
         // Bind data to views in the ViewHolder
         holder.eventTitle.text = event.date
 
-        holder.textEventSport.text = "Sport: ${event.sport}"
-        holder.textEventDate.text = "Date: ${event.date}"
-        holder.textEventTime.text = "Time: ${event.time}"
-        holder.textEventDuration.text = "Duration: ${event.duration}"
-        holder.textEventMaxPeople.text = "MaxPeople: ${event.maxPeople}"
-        holder.textEventRequiredEquipement.text = "RequiredEquipment: ${event.requiredEquipment}"
-        holder.textEventRequiredLevel.text = "RequiredLevel: ${event.requiredLevel}"
-        holder.textEventParticipating.text = "Participating: ${event.participating}"
+        holder.textEventSport.text = "Votre sport : ${event.sport}"
+        holder.textEventDate.text = "La seance a eu lieu le : ${event.date}"
+        holder.textEventTime.text = "Votre horaire etait : ${event.time}"
+        holder.textEventDuration.text = "Elle a duree : ${event.duration} h"
+        holder.textEventMaxPeople.text = "Il y avait maximum : ${event.maxPeople} personne(s)"
+        holder.textEventRequiredEquipement.text = "L'equipement necessaire etait : ${event.requiredEquipment}"
+        holder.textEventRequiredLevel.text = "Le niveau requis etait: ${event.requiredLevel}"
+        holder.textEventParticipating.text = "Vous etiez : ${event.participating} participant"
+        holder.textEventAddress.text = "La seance etait a l'addresse suivante : ${event.address}"
 
         // Set click listener on header to show/hide details
         holder.eventTitle.setOnClickListener {

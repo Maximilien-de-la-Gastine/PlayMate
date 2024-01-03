@@ -193,7 +193,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             event.requiredEquipment,
             event.requiredLevel,
             participating = 1,
-            userName = userName
+            userName = userName,
+            event.address
         )
         if (insertedId != -1L) {
             // Gérer l'insertion réussie
@@ -241,7 +242,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
         val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
         val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
-        val addressTextView = view.findViewById<TextView>(R.id.addressInput)
+        val addressInput = view.findViewById<TextView>(R.id.addressInput)
 
 
         // Options de sports disponibles
@@ -286,7 +287,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         val address = place.display_name
 
                         // Afficher l'adresse dans le champ TextView (non modifiable)
-                        addressTextView.text = address
+                        addressInput.text = address
                     } else {
                         // Gérer le cas où aucun résultat n'a été trouvé pour ces coordonnées
                     }
@@ -350,6 +351,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val maxPeople = maxPeopleInput.text.toString()
             val requiredEquipment = requiredEquipmentInput.text.toString()
             val requiredLevel = requiredLevelInput.selectedItem.toString()
+            val address = addressInput.text.toString()
 
             val userDBHelper = DataBase(requireContext())
             val userName = userDBHelper.getCurrentUsername()
@@ -367,7 +369,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     duration.toIntOrNull() ?: 0,
                     maxPeople.toIntOrNull() ?: 0,
                     requiredEquipment,
-                    requiredLevel
+                    requiredLevel,
+                    address
                 )
 
                 addMarkerToDatabase(geoPoint, event, userName)
@@ -470,6 +473,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 val maxPeopleInput = view.findViewById<EditText>(R.id.maxParticipantsInput)
                 val requiredEquipmentInput = view.findViewById<EditText>(R.id.equipmentInput)
                 val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
+                val addressInput = view.findViewById<EditText>(R.id.addressInput)
+
 
                 val sports = arrayOf("Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
                 val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sports)
@@ -489,6 +494,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 maxPeopleInput.setText(eventDetails.maxPeople.toString())
                 requiredEquipmentInput.setText(eventDetails.requiredEquipment)
                 requiredLevelInput.setSelection(getLevelIndex(eventDetails.requiredLevel)) // Function to get index of level in spinner
+                addressInput.setText(eventDetails.address)
 
                 builder.setPositiveButton("Enregistrer") { dialog, _ ->
                     val modifiedEvent = Event(
@@ -499,7 +505,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         durationInput.text.toString().toIntOrNull() ?: 0,
                         maxPeopleInput.text.toString().toIntOrNull() ?: 0,
                         requiredEquipmentInput.text.toString(),
-                        requiredLevelInput.selectedItem.toString()
+                        requiredLevelInput.selectedItem.toString(),
+                        addressInput.text.toString()
                     )
 
                     val success = markerDBHelper.updateEvent(markerId, modifiedEvent)

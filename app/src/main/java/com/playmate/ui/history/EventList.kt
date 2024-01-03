@@ -8,6 +8,7 @@ data class EventList(
     val maxPeople: String,
     val requiredEquipment: String,
     val requiredLevel: String,
-    val participating: String
+    val participating: String,
+    val address: String
 )
 

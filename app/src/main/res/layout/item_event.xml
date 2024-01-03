@@ -21,7 +21,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Event Title"
             android:textSize="18sp"
             android:textStyle="bold"/>
 
@@ -50,56 +49,55 @@
             android:id="@+id/text_event_sport"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sport: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Date: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="l'heure: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_duration"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Duree de la seance: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_max_people"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nombre maximum de personne: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_required_equipement"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Equipement necessaire: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_required_level"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Niveau de la seance: "
             android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/text_event_participating"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nombre de participant: "
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/text_event_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Adresse: "
             android:textSize="16sp"/>
 
         <!-- Ajoutez d'autres TextView pour afficher les autres détails de l'événement -->
