@@ -4,13 +4,17 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.RecyclerView
+import com.playmate.DataBase
 import com.playmate.R
 
-class EventAdapter(private val eventList: List<EventList>) :
-    RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
+class EventAdapter(private val eventList: List<EventList>, private val ratingChangeListener: RatingChangeListener) :
+    RecyclerView.Adapter<EventAdapter.EventViewHolder>(){
 
     inner class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // Initialize views inside the item_event.xml layout
@@ -25,7 +29,12 @@ class EventAdapter(private val eventList: List<EventList>) :
         val textEventRequiredLevel: TextView = itemView.findViewById(R.id.text_event_required_level)
         val textEventParticipating: TextView = itemView.findViewById(R.id.text_event_participating)
         val textEventAddress: TextView = itemView.findViewById(R.id.text_event_address)
+        val seekBarRating: SeekBar = itemView.findViewById(R.id.seek_bar_rating)
 
+    }
+
+    interface RatingChangeListener {
+        fun onRatingChanged(rating: Int)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -51,13 +60,31 @@ class EventAdapter(private val eventList: List<EventList>) :
         holder.textEventParticipating.text = "Vous etiez : ${event.participating} participant"
         holder.textEventAddress.text = "La seance etait a l'addresse suivante : ${event.address}"
 
+
+
         // Set click listener on header to show/hide details
         holder.eventTitle.setOnClickListener {
             toggleEventDetails(holder.eventDetails)
         }
 
-        // Bind other event data to corresponding views here
-        // ...
+        holder.seekBarRating.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val rating = progress + 1
+                ratingChangeListener.onRatingChanged(rating)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            // Reste du code
+        })
+
+
     }
 
     override fun getItemCount(): Int {

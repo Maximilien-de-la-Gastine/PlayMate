@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +14,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class HistoryFragment : Fragment() {
+class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
 
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
@@ -42,31 +41,25 @@ class HistoryFragment : Fragment() {
         val createdEventsCursor = dbHelper.getMarkersByUsername(currentUserName)
         val participatingEventsCursor = dbHelper.getMarkersByParticipant(currentUserName)
 
-        // Créer une liste d'événements en fonction des curseurs obtenus
         val createdEventsList = createEventListFromCursor(createdEventsCursor)
         val participatingEventsList = createEventListFromCursor(participatingEventsCursor)
 
-        // Fusionner les deux listes si nécessaire
         val allEventsList = createdEventsList + participatingEventsList
 
         val currentCalendar = Calendar.getInstance()
 
-        // Filtrer les événements passés de la liste combinée
         val filteredEventsList = allEventsList.filter { event ->
             val eventCalendar = Calendar.getInstance().apply {
-                // Convertir la date et l'heure de l'événement en un objet Calendar
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                time = dateFormat.parse("${event.date} ${event.time}") // Concaténer date et heure
+                time = dateFormat.parse("${event.date} ${event.time}")
             }
-            // Comparer avec la date et l'heure actuelles
-            eventCalendar.before(currentCalendar) // Garder les événements passés
+            eventCalendar.before(currentCalendar)
         }
 
-        val adapter = EventAdapter(filteredEventsList) // Utiliser la liste filtrée
+        val adapter = EventAdapter(filteredEventsList,this)
         recyclerView.adapter = adapter
     }
 
-    // Fonction pour obtenir les informations sur les événements à partir du curseur
     private fun createEventListFromCursor(cursor: Cursor): List<EventList> {
         val eventList = mutableListOf<EventList>()
 
@@ -100,6 +93,35 @@ class HistoryFragment : Fragment() {
 
         return eventList
     }
+
+    override fun onRatingChanged(rating: Int) {
+        rateEventCreatorsFromParticipatedEvents(rating)
+    }
+
+    fun rateEventCreatorsFromParticipatedEvents(rating: Int) {
+        val dbHelper = DataBase(requireContext())
+        val currentUserName = dbHelper.getCurrentUsername()
+
+        val participatingEventsCursor = dbHelper.getMarkersByParticipant(currentUserName)
+
+        participatingEventsCursor.use { cursor ->
+            while (cursor.moveToNext()) {
+                val eventId = cursor.getLong(cursor.getColumnIndexOrThrow(DataBase.COLUMN_MARKER_ID))
+                val creatorUsername = dbHelper.getMarkerCreatorUsername(eventId)
+
+                if (creatorUsername.isNotEmpty()) {
+                    val success = dbHelper.rateUser(creatorUsername, rating)
+                    if (success) {
+                        // La notation a été enregistrée avec succès pour ce créateur
+                    } else {
+                        // La notation a échoué pour ce créateur
+                    }
+                }
+            }
+        }
+    }
+
+
 
 
     override fun onDestroyView() {

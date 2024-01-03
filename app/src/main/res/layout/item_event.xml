@@ -100,9 +100,11 @@
             android:text="Adresse: "
             android:textSize="16sp"/>
 
-        <!-- Ajoutez d'autres TextView pour afficher les autres détails de l'événement -->
-        <!-- Par exemple: Heure, Durée, Nombre de participants, etc. -->
-        <!-- ... -->
+        <SeekBar
+            android:id="@+id/seek_bar_rating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="5" />
 
     </LinearLayout>
 

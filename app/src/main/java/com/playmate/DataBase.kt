@@ -35,6 +35,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         const val COLUMN_USER_ID = "user_id"
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
+        const val COLUMN_SCORE = "score"
 
         //3eme Table
         const val TABLE_NAME_LOGGED_IN_USER = "logged_in_user"
@@ -69,7 +70,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val createAuthTable = "CREATE TABLE $TABLE_AUTH (" +
                 "$COLUMN_USER_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "$COLUMN_USERNAME TEXT," +
-                "$COLUMN_PASSWORD TEXT" +
+                "$COLUMN_PASSWORD TEXT," +
+                "$COLUMN_SCORE INTEGER" +
                 ")"
         db.execSQL(createAuthTable)
 
@@ -352,5 +354,37 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         db.delete(TABLE_NAME_LOGGED_IN_USER, null, null)
         db.close()
     }
+
+    //-----------------------------SCORING-----------------------------------------------------
+
+    fun rateUser(username: String, rating: Int): Boolean {
+        val db = writableDatabase
+
+        val query = "SELECT $COLUMN_SCORE FROM $TABLE_AUTH WHERE $COLUMN_USERNAME = ?"
+        val cursor = db.rawQuery(query, arrayOf(username))
+
+        var currentRating = 0
+        if (cursor.moveToFirst()) {
+            currentRating = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_SCORE))
+        }
+        cursor.close()
+
+        // Calcul de la nouvelle note moyenne
+        val totalRatings = 2 // Nombre total de notations prises en compte (ancienne et nouvelle)
+        val newTotalRating = currentRating + rating
+
+        val newAverageRating = if (currentRating > 0) {
+            (newTotalRating.toDouble() / totalRatings).toFloat()
+        } else {
+            rating.toFloat()
+        }
+
+        val values = ContentValues()
+        values.put(COLUMN_SCORE, newAverageRating)
+
+        val updateResult = db.update(TABLE_AUTH, values, "$COLUMN_USERNAME = ?", arrayOf(username))
+        return updateResult > 0
+    }
+
 }
 
