@@ -97,14 +97,33 @@
             android:id="@+id/text_event_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Adresse: "
+            android:textSize="16sp"/>
+
+        <Button
+            android:id="@+id/buttonRateEvent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Noter la séance"/>
+
+        <TextView
+            android:id="@+id/text_rating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:textSize="16sp"/>
 
         <SeekBar
             android:id="@+id/seek_bar_rating"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="5" />
+            android:max="5"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/buttonSubmitRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Valider la notation"
+            android:visibility="gone" />
 
     </LinearLayout>
 
