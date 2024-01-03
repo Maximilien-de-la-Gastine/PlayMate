@@ -10,7 +10,6 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -46,7 +45,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import android.widget.AutoCompleteTextView
 import com.playmate.DataBase
-import java.util.logging.Level
 
 class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
@@ -87,13 +85,14 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun requestLocationPermission() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
+        if (isAdded && ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                AddEventFragment.PERMISSION_REQUEST_LOCATION
+            )
         } else {
             locationPermissionGranted = true
             showUserLocation()
         }
-
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -110,7 +109,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun showUserLocation() {
         if (locationPermissionGranted) {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this)
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100L, 0.5f, this)
                 userLocationMarker = Marker(mapViewAddEvent)
                 val icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_run_circle_24)
                 userLocationMarker.icon = icon

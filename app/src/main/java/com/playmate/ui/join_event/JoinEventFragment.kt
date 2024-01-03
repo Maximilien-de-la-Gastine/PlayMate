@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.playmate.DataBase
@@ -39,11 +38,6 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private lateinit var locationManager: LocationManager
     private lateinit var userLocationMarker: Marker
     private var locationPermissionGranted = false
-
-
-    companion object {
-        const val PERMISSION_REQUEST_LOCATION = 1
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,17 +67,15 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun requestLocationPermission() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                AddEventFragment.PERMISSION_REQUEST_LOCATION
-            )
+        if (isAdded && ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), AddEventFragment.PERMISSION_REQUEST_LOCATION)
         } else {
             locationPermissionGranted = true
             showUserLocation()
         }
-
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == AddEventFragment.PERMISSION_REQUEST_LOCATION) {
@@ -98,11 +90,13 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun showUserLocation() {
-        if (locationPermissionGranted) {
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 1f, this)
+        if (locationPermissionGranted && isAdded) {
+            val currentContext = context ?: return // Utilise le contexte actuel s'il est disponible
+
+            if (ContextCompat.checkSelfPermission(currentContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100L, 0.5f, this, Looper.getMainLooper())
                 userLocationMarker = Marker(mapViewJoinEvent)
-                val icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_run_circle_24)
+                val icon = ContextCompat.getDrawable(currentContext, R.drawable.baseline_run_circle_24)
                 userLocationMarker.icon = icon
                 mapViewJoinEvent.overlays.add(userLocationMarker)
             }
@@ -119,6 +113,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         mapViewJoinEvent.invalidate()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
         // Gérer les changements d'état de la localisation
     }
@@ -133,11 +128,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private fun centerMapOnUserLocation() {
         if (isAdded && locationPermissionGranted) {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 location?.let {
                     val userLocation = GeoPoint(it.latitude, it.longitude)
@@ -146,11 +137,9 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     followUserLocation = true
                 }
             } else {
-                // La permission n'est pas accordée, demandez-la à nouveau
                 requestLocationPermission()
             }
         } else {
-            // Gérer le cas où la permission de localisation n'est pas accordée
             requestLocationPermission()
         }
     }
