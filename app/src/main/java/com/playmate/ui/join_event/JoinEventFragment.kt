@@ -29,6 +29,8 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import com.playmate.databinding.FragmentJoinEventBinding
 import com.playmate.ui.add_event.AddEventFragment
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Suppress("DEPRECATION")
 class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
@@ -148,6 +150,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private val markerMaxPeople = HashMap<Long, Int>()
 
     private fun showMarkersFromDatabase() {
+        val currentDateTime = getCurrentDateTime()
         val markerDBHelper = DataBase(requireContext())
         val markersCursor = markerDBHelper.getAllMarkers()
 
@@ -170,36 +173,54 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val marker = Marker(mapViewJoinEvent)
             marker.position = geoPoint
 
-            // Titre du marqueur avec le nom du sport
-            marker.title = "Voulez-vous rejoindre cette session de $sportName"
+            val dateTimeString = "$date $time"
+            val markerDateTime = parseDateTime(dateTimeString)
 
-            markerIdMap[marker] = markerId
-            markerMaxPeople[markerId] = maxPeople
+            // Compare la date/heure actuelles avec la date/heure du marqueur
+            if (markerDateTime > currentDateTime) {
+                marker.title = "Voulez-vous rejoindre cette session de $sportName"
 
+                markerIdMap[marker] = markerId
+                markerMaxPeople[markerId] = maxPeople
 
-
-            // Description du marqueur avec les autres informations
-            val markerDescription =
+                // Description du marqueur avec les autres informations
+                val markerDescription =
                     "Createur: $userName \n" +
-                    "Date: $date\n" +
-                    "Time: $time\n" +
-                    "Duration: $duration\n" +
-                    "Max People: $maxPeople\n" +
-                    "Equipment: $requiredEquipment\n" +
-                    "Level: $requiredLevel\n" +
-                    "Number of participation: $participating\n" +
-                    "Addresse: $address"
-            marker.snippet = markerDescription
+                            "Date: $date\n" +
+                            "Time: $time\n" +
+                            "Duration: $duration\n" +
+                            "Max People: $maxPeople\n" +
+                            "Equipment: $requiredEquipment\n" +
+                            "Level: $requiredLevel\n" +
+                            "Number of participation: $participating\n" +
+                            "Addresse: $address"
+                marker.snippet = markerDescription
 
 
-            marker.setOnMarkerClickListener { _, _ ->
-                showParticipantDialog(marker)
-                true
+                marker.setOnMarkerClickListener { _, _ ->
+                    showParticipantDialog(marker)
+                    true
+                }
+
+                mapViewJoinEvent.overlays.add(marker)
+
+                marker.setOnMarkerClickListener { _, _ ->
+                    showParticipantDialog(marker)
+                    true
+                }
+
+                mapViewJoinEvent.overlays.add(marker)
             }
-
-            mapViewJoinEvent.overlays.add(marker)
-
         }
+    }
+
+    private fun getCurrentDateTime(): LocalDateTime {
+        return LocalDateTime.now()
+    }
+
+    private fun parseDateTime(dateTimeString: String): LocalDateTime {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+        return LocalDateTime.parse(dateTimeString, formatter)
     }
 
     private fun showParticipantDialog(marker: Marker) {

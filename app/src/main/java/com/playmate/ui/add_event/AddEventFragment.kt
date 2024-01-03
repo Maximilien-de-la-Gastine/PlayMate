@@ -373,8 +373,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
             // Vérifier si des données valides ont été saisies
             if (eventName.isNotBlank() && selectedSport != "Choisir un sport" && date.isNotBlank() &&
-                time.isNotBlank() && duration.isNotBlank() && maxPeople.isNotBlank() &&
-                requiredEquipment.isNotBlank() && requiredLevel != "Niveau requis"
+                time.isNotBlank() && duration.isNotBlank() && maxPeople.isNotBlank() && requiredLevel != "Niveau requis"
             ) {
                 val event = Event(
                     eventName,
