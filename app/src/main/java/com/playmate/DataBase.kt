@@ -408,5 +408,23 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return newRowId != -1L
     }
 
+    fun getUserScore(username: String): Int {
+        val db = this.readableDatabase
+        var score = 0
+
+        val query = "SELECT $COLUMN_SCORE FROM $TABLE_AUTH WHERE $COLUMN_USERNAME = ?"
+        val cursor = db.rawQuery(query, arrayOf(username))
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                score = it.getInt(it.getColumnIndexOrThrow(COLUMN_SCORE))
+            }
+        }
+        cursor.close()
+
+        return score
+    }
+
+
 }
 

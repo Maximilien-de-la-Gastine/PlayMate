@@ -18,9 +18,6 @@ import com.playmate.ui.authentication.LoginActivity
 class ProfileFragment : Fragment() {
 
     private var _binding: FragmentProfileBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -28,15 +25,24 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val logoutButton: Button = binding.root.findViewById(R.id.logout_button)
+        val textViewUserName: TextView = binding.textViewUserName
+        val scoreTextView: TextView = binding.scoreTextView
+
+        val userDBHelper = DataBase(requireContext())
+        val currentUserName = userDBHelper.getCurrentUsername()
+        val userScore = userDBHelper.getUserScore(currentUserName)
+
+        textViewUserName.text = "Nom d'utilisateur : $currentUserName"
+        scoreTextView.text = "Score : $userScore"
+
+        val logoutButton: Button = binding.logoutButton
         logoutButton.setOnClickListener {
-            // Déconnexion de l'utilisateur
             logoutUser()
         }
+
         return root
     }
 
@@ -44,7 +50,6 @@ class ProfileFragment : Fragment() {
         val userDBHelper = DataBase(requireContext())
         userDBHelper.clearLoggedInUser()
 
-        // Redirection vers l'écran de connexion (LoginActivity)
         val intent = Intent(requireActivity(), LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
