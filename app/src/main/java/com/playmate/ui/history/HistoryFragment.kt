@@ -80,6 +80,7 @@ class HistoryFragment : Fragment() {
                 val requiredEquipment = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_EQUIPMENT))
                 val requiredLevel = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_LEVEL))
                 val participating = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_PARTICIPATING))
+                val address = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_ADDRESS))
 
                 val event = EventList(
                     sport = sport,
@@ -89,7 +90,8 @@ class HistoryFragment : Fragment() {
                     maxPeople = maxPeople,
                     requiredEquipment = requiredEquipment,
                     requiredLevel = requiredLevel,
-                    participating = participating
+                    participating = participating,
+                    address = address
                 )
 
                 eventList.add(event)
