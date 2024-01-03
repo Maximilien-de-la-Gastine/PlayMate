@@ -53,6 +53,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private var _binding: FragmentAddEventBinding? = null
     private lateinit var mapViewAddEvent: MapView
     private lateinit var locationManager: LocationManager
+    private lateinit var userLocationMarker: Marker
     private var locationPermissionGranted = false
 
 
@@ -92,9 +93,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             locationPermissionGranted = true
             showUserLocation()
         }
+
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_LOCATION) {
@@ -102,26 +103,41 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 locationPermissionGranted = true
                 showUserLocation()
             } else {
-                // Permission was denied. Disable the functionality that depends on this permission.
+                // La permission a été refusée
+                // Gérer les fonctionnalités qui dépendent de la permission ici
             }
         }
     }
 
     private fun showUserLocation() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let {
+        if (locationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 1f, this)
+                userLocationMarker = Marker(mapViewAddEvent)
+                val icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_run_circle_24)
+                userLocationMarker.icon = icon
+                mapViewAddEvent.overlays.add(userLocationMarker)
             }
-
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this, Looper.getMainLooper())
-        } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
         }
     }
 
     override fun onLocationChanged(location: Location) {
-        if (followUserLocation) {
-            centerMapOnUserLocation()
-        }
+        val userLocation = GeoPoint(location.latitude, location.longitude)
+        userLocationMarker.position = userLocation
+        mapViewAddEvent.controller.setCenter(userLocation)
+        mapViewAddEvent.invalidate()
+    }
+
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+        // Gérer les changements d'état de la localisation
+    }
+
+    override fun onProviderEnabled(provider: String) {
+        // La localisation est activée
+    }
+
+    override fun onProviderDisabled(provider: String) {
+        // La localisation est désactivée
     }
 
     private fun centerMapOnUserLocation() {

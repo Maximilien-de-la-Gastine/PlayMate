@@ -29,6 +29,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import com.playmate.databinding.FragmentJoinEventBinding
+import com.playmate.ui.add_event.AddEventFragment
 
 @Suppress("DEPRECATION")
 class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
@@ -36,6 +37,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private var _binding: FragmentJoinEventBinding? = null
     private lateinit var mapViewJoinEvent: MapView
     private lateinit var locationManager: LocationManager
+    private lateinit var userLocationMarker: Marker
     private var locationPermissionGranted = false
 
 
@@ -72,62 +74,58 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     private fun requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
+            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                AddEventFragment.PERMISSION_REQUEST_LOCATION
+            )
         } else {
             locationPermissionGranted = true
             showUserLocation()
         }
+
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQUEST_LOCATION) {
+        if (requestCode == AddEventFragment.PERMISSION_REQUEST_LOCATION) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 locationPermissionGranted = true
                 showUserLocation()
             } else {
-                // Permission was denied. Disable the functionality that depends on this permission.
+                // La permission a été refusée
+                // Gérer les fonctionnalités qui dépendent de la permission ici
             }
         }
     }
 
     private fun showUserLocation() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { location ->
-                updateMapLocation(location)
+        if (locationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 1f, this)
+                userLocationMarker = Marker(mapViewJoinEvent)
+                val icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_run_circle_24)
+                userLocationMarker.icon = icon
+                mapViewJoinEvent.overlays.add(userLocationMarker)
             }
-
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this, Looper.getMainLooper())
-        } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_LOCATION)
         }
     }
 
     override fun onLocationChanged(location: Location) {
-        if (isAdded) { // Vérifie si le fragment est attaché à un contexte
-            if (followUserLocation) {
-                centerMapOnUserLocation()
-            }
-            updateMapLocation(location)
-        }
+        val userLocation = GeoPoint(location.latitude, location.longitude)
+        userLocationMarker.position = userLocation
+        mapViewJoinEvent.controller.setCenter(userLocation)
+        mapViewJoinEvent.invalidate()
     }
 
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+        // Gérer les changements d'état de la localisation
+    }
 
-    private var userMarker: Marker? = null
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private fun updateMapLocation(location: Location) {
-        val userLocation = GeoPoint(location.latitude, location.longitude)
+    override fun onProviderEnabled(provider: String) {
+        // La localisation est activée
+    }
 
-        if (userMarker == null) {
-            userMarker = Marker(mapViewJoinEvent)
-            userMarker?.position = userLocation
-            userMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            userMarker?.icon = requireContext().resources.getDrawable(R.drawable.baseline_run_circle_24)
-            mapViewJoinEvent.overlays.add(userMarker)
-        } else {
-            userMarker?.position = userLocation
-        }
+    override fun onProviderDisabled(provider: String) {
+        // La localisation est désactivée
     }
 
     private fun centerMapOnUserLocation() {
