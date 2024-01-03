@@ -56,7 +56,7 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
             eventCalendar.before(currentCalendar)
         }
 
-        val adapter = EventAdapter(filteredEventsList,this)
+        val adapter = EventAdapter(filteredEventsList, this, currentUserName, dbHelper)
         recyclerView.adapter = adapter
     }
 
@@ -65,6 +65,7 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
 
         cursor.use { cursor ->
             while (cursor.moveToNext()) {
+                val id = cursor.getLong(cursor.getColumnIndexOrThrow(DataBase.COLUMN_MARKER_ID))
                 val sport = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_SPORT))
                 val date = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_DATE))
                 val time = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_TIME))
@@ -74,8 +75,10 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
                 val requiredLevel = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_REQUIRED_LEVEL))
                 val participating = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_PARTICIPATING))
                 val address = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_ADDRESS))
+                val creatorUsername = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_USER_NAME))
 
                 val event = EventList(
+                    id = id,
                     sport = sport,
                     date = date,
                     time = time,
@@ -84,7 +87,8 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
                     requiredEquipment = requiredEquipment,
                     requiredLevel = requiredLevel,
                     participating = participating,
-                    address = address
+                    address = address,
+                    creatorUsername = creatorUsername
                 )
 
                 eventList.add(event)

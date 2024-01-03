@@ -36,6 +36,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         const val COLUMN_USERNAME = "username"
         const val COLUMN_PASSWORD = "password"
         const val COLUMN_SCORE = "score"
+        const val COLUMN_SCORED_EVENT = "scored_event"
 
         //3eme Table
         const val TABLE_NAME_LOGGED_IN_USER = "logged_in_user"
@@ -71,7 +72,8 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 "$COLUMN_USER_ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "$COLUMN_USERNAME TEXT," +
                 "$COLUMN_PASSWORD TEXT," +
-                "$COLUMN_SCORE INTEGER" +
+                "$COLUMN_SCORE INTEGER," +
+                "$COLUMN_SCORED_EVENT INTEGER" +
                 ")"
         db.execSQL(createAuthTable)
 
@@ -384,6 +386,26 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
         val updateResult = db.update(TABLE_AUTH, values, "$COLUMN_USERNAME = ?", arrayOf(username))
         return updateResult > 0
+    }
+
+    fun hasUserRatedEvent(username: String, eventId: Long): Boolean {
+        val db = readableDatabase
+        val query = "SELECT * FROM $TABLE_AUTH WHERE $COLUMN_USERNAME = ? AND $COLUMN_SCORED_EVENT = ?"
+        val cursor = db.rawQuery(query, arrayOf(username, eventId.toString()))
+
+        val count = cursor.count
+        cursor.close()
+        return count > 0
+    }
+
+    fun addEventRating(username: String, eventId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_USERNAME, username)
+        values.put(COLUMN_SCORED_EVENT, eventId)
+
+        val newRowId = db.insert(TABLE_AUTH, null, values)
+        return newRowId != -1L
     }
 
 }
