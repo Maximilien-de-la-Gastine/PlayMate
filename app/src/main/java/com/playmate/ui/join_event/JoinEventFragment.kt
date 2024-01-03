@@ -111,6 +111,9 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     override fun onLocationChanged(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
+        if (followUserLocation) {
+            centerMapOnUserLocation()
+        }
         userLocationMarker.position = userLocation
         mapViewJoinEvent.controller.setCenter(userLocation)
         mapViewJoinEvent.invalidate()

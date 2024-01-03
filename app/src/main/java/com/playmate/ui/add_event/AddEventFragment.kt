@@ -103,8 +103,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 locationPermissionGranted = true
                 showUserLocation()
             } else {
-                // La permission a été refusée
-                // Gérer les fonctionnalités qui dépendent de la permission ici
             }
         }
     }
@@ -112,7 +110,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     private fun showUserLocation() {
         if (locationPermissionGranted) {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 1f, this)
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500L, 0.5f, this)
                 userLocationMarker = Marker(mapViewAddEvent)
                 val icon = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_run_circle_24)
                 userLocationMarker.icon = icon
@@ -123,8 +121,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     override fun onLocationChanged(location: Location) {
         val userLocation = GeoPoint(location.latitude, location.longitude)
+        if (followUserLocation) {
+            centerMapOnUserLocation()
+        }
         userLocationMarker.position = userLocation
-        mapViewAddEvent.controller.setCenter(userLocation)
         mapViewAddEvent.invalidate()
     }
 
