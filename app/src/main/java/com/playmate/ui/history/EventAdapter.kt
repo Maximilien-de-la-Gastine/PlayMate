@@ -2,7 +2,6 @@ package com.playmate.ui.history
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +16,21 @@ import com.playmate.R
 
 class EventAdapter(
     private val eventList: List<EventList>,
-    private val ratingChangeListener: RatingChangeListener,
+    private val ratingChangeListener: HistoryFragment,
     private val currentUserName: String,
     private val database: DataBase
-) : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    inner class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    companion object {
+        const val PAST_EVENT = 1
+        const val FUTURE_EVENT = 2
+    }
+
+    interface RatingChangeListener {
+        fun onRatingChanged(rating: Int)
+    }
+
+    inner class PastEventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val eventTitle: TextView = itemView.findViewById(R.id.text_event_title)
         val textEventSport: TextView = itemView.findViewById(R.id.text_event_sport)
         val textEventDate: TextView = itemView.findViewById(R.id.text_event_date)
@@ -40,88 +48,146 @@ class EventAdapter(
         val textRating: TextView = itemView.findViewById(R.id.text_rating)
     }
 
-    interface RatingChangeListener {
-        fun onRatingChanged(rating: Int)
+    inner class FutureEventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val eventTitle: TextView = itemView.findViewById(R.id.text_event_title)
+        val textEventSport: TextView = itemView.findViewById(R.id.text_event_sport)
+        val textEventDate: TextView = itemView.findViewById(R.id.text_event_date)
+        val textEventTime: TextView = itemView.findViewById(R.id.text_event_time)
+        val eventDetails: LinearLayout = itemView.findViewById(R.id.layout_event_details)
+        val textEventDuration: TextView = itemView.findViewById(R.id.text_event_duration)
+        val textEventMaxPeople: TextView = itemView.findViewById(R.id.text_event_max_people)
+        val textEventRequiredEquipement: TextView = itemView.findViewById(R.id.text_event_required_equipement)
+        val textEventRequiredLevel: TextView = itemView.findViewById(R.id.text_event_required_level)
+        val textEventParticipating: TextView = itemView.findViewById(R.id.text_event_participating)
+        val textEventAddress: TextView = itemView.findViewById(R.id.text_event_address)
+        // Additional views specific to FutureEventViewHolder if needed
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_event, parent, false)
-        return EventViewHolder(view)
+
+
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            PAST_EVENT -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_past_event, parent, false)
+                PastEventViewHolder(view)
+            }
+            else -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_future_event, parent, false)
+                FutureEventViewHolder(view)
+            }
+        }
     }
+
+
 
     @SuppressLint("SetTextI18n")
-    override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val event = eventList[position]
 
-        holder.eventTitle.text = event.date
-        holder.textEventSport.text = "Votre sport : ${event.sport}"
-        holder.textEventDate.text = "La séance a eu lieu le : ${event.date}"
-        holder.textEventTime.text = "Votre horaire était à : ${event.time}"
-        holder.textEventDuration.text = "Elle a duré : ${event.duration} h"
-        holder.textEventMaxPeople.text = "Il y avait maximum : ${event.maxPeople} personne(s)"
-        holder.textEventRequiredEquipement.text = "L'équipement nécessaire était : ${event.requiredEquipment}"
-        holder.textEventRequiredLevel.text = "Le niveau requis était: ${event.requiredLevel}"
-        holder.textEventParticipating.text = "Vous étiez : ${event.participating} participant"
-        holder.textEventAddress.text = "La séance était à l'adresse suivante : ${event.address}"
+        when (holder.itemViewType) {
+            PAST_EVENT -> {
+                val pastHolder = holder as PastEventViewHolder
+                pastHolder.eventTitle.text = event.date
+                pastHolder.textEventSport.text = "Votre sport : ${event.sport}"
+                pastHolder.textEventDate.text = "La séance a eu lieu le : ${event.date}"
+                pastHolder.textEventTime.text = "Votre horaire était à : ${event.time}"
+                pastHolder.textEventDuration.text = "Elle a duré : ${event.duration} h"
+                pastHolder.textEventMaxPeople.text = "Il y avait maximum : ${event.maxPeople} personne(s)"
+                pastHolder.textEventRequiredEquipement.text = "L'équipement nécessaire était : ${event.requiredEquipment}"
+                pastHolder.textEventRequiredLevel.text = "Le niveau requis était: ${event.requiredLevel}"
+                pastHolder.textEventParticipating.text = "Vous étiez : ${event.participating} participant"
+                pastHolder.textEventAddress.text = "La séance était à l'adresse suivante : ${event.address}"
 
-        holder.eventTitle.setOnClickListener {
-            toggleEventDetails(holder.eventDetails)
-        }
+                pastHolder.eventTitle.setOnClickListener {
+                    toggleEventDetails(pastHolder.eventDetails)
+                }
 
-        if (event.isRated) {
-            holder.buttonRateEvent.visibility = View.GONE
-        } else {
-            holder.buttonRateEvent.visibility = View.VISIBLE
-            holder.buttonRateEvent.setOnClickListener {
-                if (event.creatorUsername == currentUserName) {
-                    Toast.makeText(
-                        holder.itemView.context,
-                        "Vous ne pouvez pas noter votre propre événement",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                if (event.isRated) {
+                    pastHolder.buttonRateEvent.visibility = View.GONE
                 } else {
-                    showRatingDialog(holder, event)
+                    pastHolder.buttonRateEvent.visibility = View.VISIBLE
+                    pastHolder.buttonRateEvent.setOnClickListener {
+                        if (event.creatorUsername == currentUserName) {
+                            Toast.makeText(
+                                pastHolder.itemView.context,
+                                "Vous ne pouvez pas noter votre propre événement",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            showRatingDialog(pastHolder, event)
+                        }
+                    }
+                }
+
+                pastHolder.seekBarRating.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        val ratingValue = progress
+                        pastHolder.textRating.text = "$ratingValue sur 5"
+                        pastHolder.buttonSubmitRating.visibility = View.VISIBLE
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+
+                pastHolder.buttonSubmitRating.setOnClickListener {
+                    val rating = pastHolder.seekBarRating.progress
+
+                    if (!database.hasUserRatedEvent(currentUserName, event.id)) {
+                        ratingChangeListener.onRatingChanged(rating)
+
+                        database.addEventRating(currentUserName, event.id)
+
+                        val message = "Note envoyée : $rating"
+                        Toast.makeText(pastHolder.itemView.context, message, Toast.LENGTH_SHORT).show()
+
+                        event.isRated = true
+                        pastHolder.buttonRateEvent.visibility = View.GONE
+                        pastHolder.seekBarRating.visibility = View.GONE
+                        pastHolder.buttonSubmitRating.visibility = View.GONE
+                    } else {
+                        Toast.makeText(pastHolder.itemView.context, "Vous avez déjà noté cet événement", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+            }
+            FUTURE_EVENT -> {
+                val futureHolder = holder as FutureEventViewHolder
+                futureHolder.eventTitle.text = event.date
+                futureHolder.textEventSport.text = "Votre sport : ${event.sport}"
+                futureHolder.textEventDate.text = "La séance a eu lieu le : ${event.date}"
+                futureHolder.textEventTime.text = "Votre horaire était à : ${event.time}"
+                futureHolder.textEventDuration.text = "Elle a duré : ${event.duration} h"
+                futureHolder.textEventMaxPeople.text = "Il y avait maximum : ${event.maxPeople} personne(s)"
+                futureHolder.textEventRequiredEquipement.text = "L'équipement nécessaire était : ${event.requiredEquipment}"
+                futureHolder.textEventRequiredLevel.text = "Le niveau requis était: ${event.requiredLevel}"
+                futureHolder.textEventParticipating.text = "Vous étiez : ${event.participating} participant"
+                futureHolder.textEventAddress.text = "La séance était à l'adresse suivante : ${event.address}"
+
+                futureHolder.eventTitle.setOnClickListener {
+                    toggleEventDetails(futureHolder.eventDetails)
                 }
             }
         }
-
-        holder.seekBarRating.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val ratingValue = progress
-                holder.textRating.text = "$ratingValue sur 5"
-                holder.buttonSubmitRating.visibility = View.VISIBLE
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        holder.buttonSubmitRating.setOnClickListener {
-            val rating = holder.seekBarRating.progress
-
-            if (!database.hasUserRatedEvent(currentUserName, event.id)) {
-                ratingChangeListener.onRatingChanged(rating)
-
-                database.addEventRating(currentUserName, event.id)
-
-                val message = "Note envoyée : $rating"
-                Toast.makeText(holder.itemView.context, message, Toast.LENGTH_SHORT).show()
-
-                event.isRated = true
-                holder.buttonRateEvent.visibility = View.GONE
-                holder.seekBarRating.visibility = View.GONE
-                holder.buttonSubmitRating.visibility = View.GONE
-            } else {
-                Toast.makeText(holder.itemView.context, "Vous avez déjà noté cet événement", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
     }
+
 
     override fun getItemCount(): Int {
         return eventList.size
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        // Déterminez ici si l'événement est passé ou futur
+        // Comparez la date de l'événement avec la date actuelle et retournez le viewType approprié
+        return if (eventList[position].isPastEvent) {
+            PAST_EVENT
+        } else {
+            FUTURE_EVENT
+        }
     }
 
     private fun toggleEventDetails(layout: View) {
@@ -132,13 +198,15 @@ class EventAdapter(
         }
     }
 
-    private fun showRatingDialog(holder: EventViewHolder, event: EventList) {
+    private fun showRatingDialog(holder: RecyclerView.ViewHolder, event: EventList) {
         val ratingDialog = AlertDialog.Builder(holder.itemView.context)
             .setTitle("Noter la séance")
             .setMessage("Voulez-vous noter cette séance ?")
             .setPositiveButton("Oui") { dialog, _ ->
-                holder.seekBarRating.visibility = View.VISIBLE
-                holder.buttonRateEvent.visibility = View.GONE
+                if (holder is PastEventViewHolder) {
+                    holder.seekBarRating.visibility = View.VISIBLE
+                    holder.buttonRateEvent.visibility = View.GONE
+                }
                 dialog.dismiss()
             }
             .setNegativeButton("Non") { dialog, _ ->
@@ -148,4 +216,5 @@ class EventAdapter(
 
         ratingDialog.show()
     }
+
 }

@@ -12,6 +12,7 @@ data class EventList(
     val participating: String,
     val address: String,
     var isRated: Boolean = false,
-    val creatorUsername: String
+    val creatorUsername: String,
+    val isPastEvent: Boolean
 )
 

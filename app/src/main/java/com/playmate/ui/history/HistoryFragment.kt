@@ -48,20 +48,29 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
 
         val currentCalendar = Calendar.getInstance()
 
-        val filteredEventsList = allEventsList.filter { event ->
+        val filteredEventsListPast = allEventsList.filter { event ->
             val eventCalendar = Calendar.getInstance().apply {
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 time = dateFormat.parse("${event.date} ${event.time}")
             }
             eventCalendar.before(currentCalendar)
         }
+        val filteredEventsListFuture = allEventsList.filter { event ->
+            val eventCalendar = Calendar.getInstance().apply {
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                time = dateFormat.parse("${event.date} ${event.time}")
+            }
+            eventCalendar.after(currentCalendar)
+        }
 
-        val adapter = EventAdapter(filteredEventsList, this, currentUserName, dbHelper)
+        val adapter = EventAdapter(allEventsList, this, currentUserName, dbHelper)
         recyclerView.adapter = adapter
     }
 
     private fun createEventListFromCursor(cursor: Cursor): List<EventList> {
         val eventList = mutableListOf<EventList>()
+        val currentCalendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
         cursor.use { cursor ->
             while (cursor.moveToNext()) {
@@ -77,6 +86,9 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
                 val address = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_ADDRESS))
                 val creatorUsername = cursor.getString(cursor.getColumnIndexOrThrow(DataBase.COLUMN_USER_NAME))
 
+                val eventDateTime = "$date $time"
+                val isPastEvent = dateFormat.parse(eventDateTime)?.before(currentCalendar.time) ?: false
+
                 val event = EventList(
                     id = id,
                     sport = sport,
@@ -88,7 +100,8 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
                     requiredLevel = requiredLevel,
                     participating = participating,
                     address = address,
-                    creatorUsername = creatorUsername
+                    creatorUsername = creatorUsername,
+                    isPastEvent = isPastEvent
                 )
 
                 eventList.add(event)
@@ -116,9 +129,9 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
                 if (creatorUsername.isNotEmpty()) {
                     val success = dbHelper.rateUser(creatorUsername, rating)
                     if (success) {
-                        // La notation a été enregistrée avec succès pour ce créateur
+
                     } else {
-                        // La notation a échoué pour ce créateur
+
                     }
                 }
             }
