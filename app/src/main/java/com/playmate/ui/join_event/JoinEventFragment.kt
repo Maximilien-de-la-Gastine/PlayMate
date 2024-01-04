@@ -168,6 +168,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val participating = markersCursor.getString(markersCursor.getColumnIndexOrThrow("participating"))
             val userName = markersCursor.getString(markersCursor.getColumnIndexOrThrow("user_name"))
             val address = markersCursor.getString(markersCursor.getColumnIndexOrThrow("address"))
+            val userScore = markerDBHelper.getUserScore(userName)
 
             val geoPoint = GeoPoint(latitude, longitude)
             val marker = Marker(mapViewJoinEvent)
@@ -185,7 +186,8 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
                 // Description du marqueur avec les autres informations
                 val markerDescription =
-                    "Createur: $userName \n" +
+                            "Createur: $userName \n" +
+                            "Note du createur de la seance: $userScore sur 5\n" +
                             "Date: $date\n" +
                             "Time: $time\n" +
                             "Duration: $duration\n" +
