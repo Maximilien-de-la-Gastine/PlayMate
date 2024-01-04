@@ -97,6 +97,14 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"/>
 
+        <Button
+            android:id="@+id/buttonFillCalendar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Remplir l'agenda"
+            android:onClick="fillCalendar" />
+
+
     </LinearLayout>
 
 </LinearLayout>

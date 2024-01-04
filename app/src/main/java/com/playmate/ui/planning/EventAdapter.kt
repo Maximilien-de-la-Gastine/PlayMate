@@ -2,6 +2,9 @@ package com.playmate.ui.planning
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
+import android.provider.CalendarContract
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +16,8 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.playmate.DataBase
 import com.playmate.R
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class EventAdapter(
     private val eventList: List<EventList>,
@@ -60,11 +65,8 @@ class EventAdapter(
         val textEventRequiredLevel: TextView = itemView.findViewById(R.id.text_event_required_level)
         val textEventParticipating: TextView = itemView.findViewById(R.id.text_event_participating)
         val textEventAddress: TextView = itemView.findViewById(R.id.text_event_address)
-        // Additional views specific to FutureEventViewHolder if needed
+        val buttonFillCalendar: Button = itemView.findViewById(R.id.buttonFillCalendar)
     }
-
-
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -80,8 +82,6 @@ class EventAdapter(
             }
         }
     }
-
-
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -171,10 +171,14 @@ class EventAdapter(
                 futureHolder.eventTitle.setOnClickListener {
                     toggleEventDetails(futureHolder.eventDetails)
                 }
+
+                futureHolder.buttonFillCalendar.setOnClickListener {
+                    val event = eventList[position] // Replace this with getting the specific event for this position
+                    addToCalendar(event, futureHolder.itemView.context)
+                }
             }
         }
     }
-
 
     override fun getItemCount(): Int {
         return eventList.size
@@ -217,4 +221,25 @@ class EventAdapter(
         ratingDialog.show()
     }
 
+    private fun addToCalendar(event: EventList, context: Context) {
+        val beginTime: Long = parseDateTime(event.date, event.time)
+
+        val durationInHours = event.duration.toInt() * 60 * 60 * 1000
+        val endTime: Long = beginTime + durationInHours
+
+        val intent = Intent(Intent.ACTION_INSERT)
+            .setData(CalendarContract.Events.CONTENT_URI)
+            .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime)
+            .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTime)
+            .putExtra(CalendarContract.Events.TITLE, "Votre séance de ${event.sport}")
+
+        context.startActivity(intent)
+    }
+
+    private fun parseDateTime(date: String, time: String): Long {
+        val dateTimeString = "$date $time"
+        val pattern = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val dateTime = pattern.parse(dateTimeString)
+        return dateTime?.time ?: 0
+    }
 }
