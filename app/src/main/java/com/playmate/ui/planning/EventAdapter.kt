@@ -1,4 +1,4 @@
-package com.playmate.ui.history
+package com.playmate.ui.planning
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -16,7 +16,7 @@ import com.playmate.R
 
 class EventAdapter(
     private val eventList: List<EventList>,
-    private val ratingChangeListener: HistoryFragment,
+    private val ratingChangeListener: PlanningFragment,
     private val currentUserName: String,
     private val database: DataBase
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

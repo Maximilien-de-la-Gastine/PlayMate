@@ -1,4 +1,4 @@
-package com.playmate.ui.history
+package com.playmate.ui.planning
 
 import android.database.Cursor
 import android.os.Bundle
@@ -9,14 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.playmate.DataBase
-import com.playmate.databinding.FragmentHistoryBinding
+import com.playmate.databinding.FragmentPlanningBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
+class PlanningFragment : Fragment(), EventAdapter.RatingChangeListener {
 
-    private var _binding: FragmentHistoryBinding? = null
+    private var _binding: FragmentPlanningBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -24,7 +24,7 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHistoryBinding.inflate(inflater, container, false)
+        _binding = FragmentPlanningBinding.inflate(inflater, container, false)
         val root: View = binding.root
         return root
     }

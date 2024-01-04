@@ -1,4 +1,4 @@
-package com.playmate.ui.history
+package com.playmate.ui.planning
 
 data class EventList(
     val id: Long,
