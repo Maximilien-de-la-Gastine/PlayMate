@@ -32,9 +32,6 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val recyclerView: RecyclerView = binding.recyclerViewEvents
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
         val dbHelper = DataBase(requireContext())
         val currentUserName = dbHelper.getCurrentUsername()
 
@@ -63,8 +60,32 @@ class HistoryFragment : Fragment(), EventAdapter.RatingChangeListener {
             eventCalendar.after(currentCalendar)
         }
 
-        val adapter = EventAdapter(allEventsList, this, currentUserName, dbHelper)
-        recyclerView.adapter = adapter
+        val adapterPastEvents = EventAdapter(filteredEventsListPast, this, currentUserName, dbHelper)
+        val adapterFutureEvents = EventAdapter(filteredEventsListFuture, this, currentUserName, dbHelper)
+
+        val recyclerViewPast: RecyclerView = binding.recyclerViewPastEvents
+        recyclerViewPast.layoutManager = LinearLayoutManager(requireContext())
+        recyclerViewPast.adapter = adapterPastEvents
+
+        val recyclerViewFuture: RecyclerView = binding.recyclerViewFutureEvents
+        recyclerViewFuture.layoutManager = LinearLayoutManager(requireContext())
+        recyclerViewFuture.adapter = adapterFutureEvents
+
+        if (filteredEventsListPast.isNotEmpty()) {
+            binding.textEventsPast.visibility = View.VISIBLE
+            recyclerViewPast.visibility = View.VISIBLE
+        } else {
+            binding.textEventsPast.visibility = View.GONE
+            recyclerViewPast.visibility = View.GONE
+        }
+
+        if (filteredEventsListFuture.isNotEmpty()) {
+            binding.textEventsFuture.visibility = View.VISIBLE
+            recyclerViewFuture.visibility = View.VISIBLE
+        } else {
+            binding.textEventsFuture.visibility = View.GONE
+            recyclerViewFuture.visibility = View.GONE
+        }
     }
 
     private fun createEventListFromCursor(cursor: Cursor): List<EventList> {

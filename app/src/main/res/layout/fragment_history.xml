@@ -1,12 +1,42 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:orientation="vertical">
+
+    <!-- Titre et RecyclerView pour les événements à venir -->
+    <TextView
+        android:id="@+id/textEventsFuture"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Événements à venir"
+        android:textSize="18sp"
+        android:padding="8dp"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view_events"
+        android:id="@+id/recyclerViewFutureEvents"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="8dp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Titre et RecyclerView pour les événements passés -->
+    <TextView
+        android:id="@+id/textEventsPast"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Événements passés"
+        android:textSize="18sp"
+        android:padding="8dp"
+        android:background="@android:color/darker_gray"
+        android:textColor="@android:color/white"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewPastEvents"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="8dp"/>
+
+</LinearLayout>
