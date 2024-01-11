@@ -69,7 +69,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val root: View = binding.root
 
         // Initialise la vue de la carte
-        mapViewAddEvent = binding.mapViewAddEvent // Met à jour la référence à la carte renommée
+        mapViewAddEvent = binding.mapViewAddEvent
         Configuration.getInstance().userAgentValue = requireActivity().packageName
         mapViewAddEvent.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
         mapViewAddEvent.setMultiTouchControls(true)
@@ -102,6 +102,7 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 locationPermissionGranted = true
                 showUserLocation()
             } else {
+                //
             }
         }
     }
@@ -128,19 +129,16 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-        // Gérer les changements d'état de la localisation
     }
 
     override fun onProviderEnabled(provider: String) {
-        // La localisation est activée
     }
 
     override fun onProviderDisabled(provider: String) {
-        // La localisation est désactivée
     }
 
     private fun centerMapOnUserLocation() {
-        val currentContext = context ?: return // Vérifie si le contexte est disponible
+        val currentContext = context ?: return
 
         if (locationPermissionGranted) {
             if (ContextCompat.checkSelfPermission(
@@ -156,11 +154,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     followUserLocation = true
                 }
             } else {
-                // La permission n'est pas accordée, demandez-la à nouveau
                 requestLocationPermission()
             }
         } else {
-            // Gérer le cas où la permission de localisation n'est pas accordée
             requestLocationPermission()
         }
     }
@@ -171,22 +167,18 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun addMarker(geoPoint: GeoPoint) {
-        // Création du marqueur
+
         val marker = Marker(mapViewAddEvent)
         marker.position = geoPoint
 
-        // Titre du marqueur avec le nom du sport
-        marker.title = "Nouvelle balise : ${geoPoint.latitude}, ${geoPoint.longitude}" // Ajout des coordonnées dans le titre du marqueur
+        marker.title = "Nouvelle balise : ${geoPoint.latitude}, ${geoPoint.longitude}"
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
-        // Ajout du marqueur à la carte
         mapViewAddEvent.overlays.add(marker)
         mapViewAddEvent.invalidate()
 
-        // Centrage de la carte sur le nouveau marqueur
         mapViewAddEvent.controller.setCenter(geoPoint)
 
-        // Affichage des coordonnées dans un Toast
         val coordinates = "Latitude : ${geoPoint.latitude}, Longitude : ${geoPoint.longitude}"
         Toast.makeText(requireContext(), coordinates, Toast.LENGTH_SHORT).show()
 
@@ -212,9 +204,9 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             event.address
         )
         if (insertedId != -1L) {
-            // Gérer l'insertion réussie
+
         } else {
-            // Gérer l'échec de l'insertion
+
         }
     }
 
@@ -259,29 +251,22 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val requiredLevelInput = view.findViewById<Spinner>(R.id.requiredLevelInput)
         val addressInput = view.findViewById<TextView>(R.id.addressInput)
 
-
-        // Options de sports disponibles
         val sports = arrayOf("Choisir un sport", "Football", "Basketball", "Tennis", "Course à pied", "Spikeball")
 
-
-        // Création de l'adaptateur pour le Spinner
         val sportAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sports)
         sportAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sportInput.adapter = sportAdapter
         sportInput.setSelection(0, false)
         sportInput.prompt = "Choisir un sport"
 
-        //option pour le niveau
         val level = arrayOf("Niveau requis", "Tous les niveaux", "Débutant", "Intermediaire", "Elevé")
 
-        //spinner du niveau
         val levelAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, level)
         levelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         requiredLevelInput.adapter = levelAdapter
         requiredLevelInput.setSelection(0, false)
         requiredLevelInput.prompt = "Choisir le niveau"
 
-        //pour l'adresse
         val retrofit = Retrofit.Builder()
             .baseUrl("https://nominatim.openstreetmap.org/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -301,22 +286,20 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         val place = places[0]
                         val address = place.display_name
 
-                        // Afficher l'adresse dans le champ TextView (non modifiable)
                         addressInput.text = address
                     } else {
-                        // Gérer le cas où aucun résultat n'a été trouvé pour ces coordonnées
+                        // le cas où aucun résultat n'a été trouvé pour ces coordonnées
                     }
                 } else {
-                    // Gérer les erreurs de réponse ici
+                    // les erreurs de réponse
                 }
             }
 
             override fun onFailure(call: Call<NominatimResponse>, t: Throwable) {
-                // Gérer les échecs de requête ici
+                // les échecs de requête
             }
         })
 
-        // Sélection de la date avec DatePicker
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -371,7 +354,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val userDBHelper = DataBase(requireContext())
             val userName = userDBHelper.getCurrentUsername()
 
-            // Vérifier si des données valides ont été saisies
             if (eventName.isNotBlank() && selectedSport != "Choisir un sport" && date.isNotBlank() &&
                 time.isNotBlank() && duration.isNotBlank() && maxPeople.isNotBlank() && requiredLevel != "Niveau requis"
             ) {
@@ -432,12 +414,10 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val marker = Marker(mapViewAddEvent)
             marker.position = geoPoint
 
-            // Titre du marqueur avec le nom du sport
             marker.title = "Votre seance de $sportName"
 
             markerIdMap[marker] = markerId
 
-            // Description du marqueur avec les autres informations
             val markerDescription =
                 "Createur: $userName \n" +
                         "Date: $date\n" +
@@ -501,13 +481,13 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 requiredLevelInput.adapter = requiredLevelAdapter
 
                 eventNameInput.setText(eventDetails.eventName)
-                sportInput.setSelection(getSportIndex(eventDetails.sport)) // Function to get index of sport in spinner
+                sportInput.setSelection(getSportIndex(eventDetails.sport))
                 dateInput.text = eventDetails.date
                 timeInput.text = eventDetails.time
                 durationInput.setText(eventDetails.duration.toString())
                 maxPeopleInput.setText(eventDetails.maxPeople.toString())
                 requiredEquipmentInput.setText(eventDetails.requiredEquipment)
-                requiredLevelInput.setSelection(getLevelIndex(eventDetails.requiredLevel)) // Function to get index of level in spinner
+                requiredLevelInput.setSelection(getLevelIndex(eventDetails.requiredLevel))
                 addressInput.setText(eventDetails.address)
 
                 builder.setPositiveButton("Enregistrer") { dialog, _ ->
@@ -577,12 +557,6 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         displayUserMarkers()
     }
 
-
-
-
-
-
-
     private var followUserLocation = false
 
     @SuppressLint("ClickableViewAccessibility")
@@ -635,12 +609,8 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
     }
 
     private fun getAutocompleteSuggestions(query: String, adapter: ArrayAdapter<String>) {
-        // Ici, vous feriez un appel à une API ou utiliseriez une logique pour obtenir des suggestions basées sur le texte de recherche
-        // Vous pouvez mettre en œuvre cette logique en utilisant Retrofit ou une autre bibliothèque de réseau
-
-        // Par exemple, si vous utilisez Retrofit pour obtenir des suggestions d'une API, cela pourrait ressembler à ceci :
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://votre-api.com/") // Remplacez par l'URL de votre API
+            .baseUrl("https://votre-api.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
@@ -657,12 +627,12 @@ class AddEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                         adapter.notifyDataSetChanged()
                     }
                 } else {
-                    // Gérer les erreurs de réponse de l'API ici
+                    // les erreurs de réponse de l'API
                 }
             }
 
             override fun onFailure(call: Call<List<String>>, t: Throwable) {
-                // Gérer les échecs de requête ici
+                // les échecs de requête
             }
         })
     }

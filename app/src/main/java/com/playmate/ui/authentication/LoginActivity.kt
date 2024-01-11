@@ -46,7 +46,6 @@ class LoginActivity : AppCompatActivity() {
                 if (userDBHelper.isLoggedIn(username, password)) {
                     showToast("Connexion réussie en tant que $username")
                     userDBHelper.saveLoggedInUser(username)
-                    // Redirection vers l'écran suivant après la connexion réussie
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -60,7 +59,6 @@ class LoginActivity : AppCompatActivity() {
                 val newPassword = editTextNewPassword.text.toString()
 
                 if (newUsername.isNotEmpty() && newPassword.isNotEmpty()) {
-                    // Vérifiez si l'utilisateur existe déjà dans la base de données
                     val isUserExists = userDBHelper.isUserExists(newUsername)
 
                     if (isUserExists) {

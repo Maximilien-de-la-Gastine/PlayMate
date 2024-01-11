@@ -51,7 +51,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         val root: View = binding.root
 
         // Initialise la vue de la carte
-        mapViewJoinEvent = binding.mapViewJoinEvent // Met à jour la référence à la carte renommée
+        mapViewJoinEvent = binding.mapViewJoinEvent
         Configuration.getInstance().userAgentValue = requireActivity().packageName
         mapViewJoinEvent.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
         mapViewJoinEvent.setMultiTouchControls(true)
@@ -85,15 +85,14 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                 locationPermissionGranted = true
                 showUserLocation()
             } else {
-                // La permission a été refusée
-                // Gérer les fonctionnalités qui dépendent de la permission ici
+                // fonctionnalités qui dépendent de la permission
             }
         }
     }
 
     private fun showUserLocation() {
         if (locationPermissionGranted && isAdded) {
-            val currentContext = context ?: return // Utilise le contexte actuel s'il est disponible
+            val currentContext = context ?: return
 
             if (ContextCompat.checkSelfPermission(currentContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100L, 0.5f, this, Looper.getMainLooper())
@@ -117,7 +116,7 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
     @Deprecated("Deprecated in Java")
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-        // Gérer les changements d'état de la localisation
+        // les changements d'état de la localisation
     }
 
     override fun onProviderEnabled(provider: String) {
@@ -177,24 +176,22 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             val dateTimeString = "$date $time"
             val markerDateTime = parseDateTime(dateTimeString)
 
-            // Compare la date/heure actuelles avec la date/heure du marqueur
             if (markerDateTime > currentDateTime) {
                 marker.title = "Voulez-vous rejoindre cette session de $sportName"
 
                 markerIdMap[marker] = markerId
                 markerMaxPeople[markerId] = maxPeople
 
-                // Description du marqueur avec les autres informations
                 val markerDescription =
                             "Createur: $userName \n" +
                             "Note du createur de la seance: $userScore sur 5\n" +
                             "Date: $date\n" +
-                            "Time: $time\n" +
-                            "Duration: $duration\n" +
-                            "Max People: $maxPeople\n" +
+                            "Heure: $time\n" +
+                            "Duree: $duration\n" +
+                            "Nombre de personne maximum: $maxPeople\n" +
                             "Equipment: $requiredEquipment\n" +
-                            "Level: $requiredLevel\n" +
-                            "Number of participation: $participating\n" +
+                            "Niveau: $requiredLevel\n" +
+                            "Nombre de participant: $participating\n" +
                             "Addresse: $address"
                 marker.snippet = markerDescription
 
@@ -238,7 +235,6 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
                     if (currentUsername.isNotEmpty()) {
                         addParticipantToEvent(eventId, currentUsername)
                     } else {
-                        // Gérer le cas où le nom d'utilisateur actuel n'est pas disponible
                         Toast.makeText(requireContext(), "Nom d'utilisateur introuvable.", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -260,11 +256,10 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
 
         if (currentParticipants < maxPeople) {
             if (userDBHelper.getCurrentUsername() != markerCreator) {
-                // Vérifie si l'utilisateur a déjà rejoint cet événement
                 val hasJoined = userDBHelper.hasUserJoinedEvent(currentUsername, eventId)
                 if (!hasJoined) {
                     markerDBHelper.incrementParticipants(eventId)
-                    userDBHelper.addUserToEvent(currentUsername, eventId) // Enregistre la participation de l'utilisateur à l'événement
+                    userDBHelper.addUserToEvent(currentUsername, eventId)
                     Toast.makeText(requireContext(), "Inscription réussie !", Toast.LENGTH_SHORT).show()
                     showMarkersFromDatabase()
                 } else {
@@ -287,31 +282,25 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
         return false
     }
 
-
-
-
     private var followUserLocation = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         val followButton = view.findViewById<Button>(R.id.centerButton)
         followButton.setOnClickListener {
-            // Activer le suivi de l'utilisateur lorsqu'on appuie sur le bouton
             followUserLocation = true
-            centerMapOnUserLocation() // Centrer la carte sur la position de l'utilisateur
+            centerMapOnUserLocation()
         }
 
         mapViewJoinEvent.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_MOVE -> {
-                    // L'utilisateur fait défiler la carte, désactiver le suivi automatique de l'utilisateur
                     followUserLocation = false
                 }
             }
-            false // Retourne false pour ne pas interrompre le traitement des événements par la carte
+            false
         }
     }
 }

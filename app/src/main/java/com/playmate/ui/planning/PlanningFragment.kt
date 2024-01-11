@@ -124,11 +124,9 @@ class PlanningFragment : Fragment(), EventAdapter.RatingChangeListener {
                     creatorUsername = creatorUsername,
                     isPastEvent = isPastEvent
                 )
-
                 eventList.add(event)
             }
         }
-
         return eventList
     }
 
@@ -158,9 +156,6 @@ class PlanningFragment : Fragment(), EventAdapter.RatingChangeListener {
             }
         }
     }
-
-
-
 
     override fun onDestroyView() {
         super.onDestroyView()

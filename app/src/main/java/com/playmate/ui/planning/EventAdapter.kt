@@ -173,7 +173,7 @@ class EventAdapter(
                 }
 
                 futureHolder.buttonFillCalendar.setOnClickListener {
-                    val event = eventList[position] // Replace this with getting the specific event for this position
+                    val event = eventList[position]
                     addToCalendar(event, futureHolder.itemView.context)
                 }
             }
@@ -185,8 +185,6 @@ class EventAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        // Déterminez ici si l'événement est passé ou futur
-        // Comparez la date de l'événement avec la date actuelle et retournez le viewType approprié
         return if (eventList[position].isPastEvent) {
             PAST_EVENT
         } else {

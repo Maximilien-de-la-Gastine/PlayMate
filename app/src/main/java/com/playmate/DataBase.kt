@@ -130,7 +130,6 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         values.put(COLUMN_USER_NAME, userName)
         values.put(COLUMN_ADDRESS, address)
 
-
         val db = this.writableDatabase
         return db.insert(TABLE_NAME, null, values)
     }
@@ -151,9 +150,10 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         val query = "SELECT * FROM $TABLE_NAME WHERE $COLUMN_MARKER_ID IN (SELECT $COLUMN_MARKER_ID FROM $TABLE_USER_EVENT WHERE $COLUMN_USERNAME = ?)"
         return db.rawQuery(query, arrayOf(userName))
     }
+
     fun getCurrentUsername(): String {
         val db = readableDatabase
-        var username: String = "" // Valeur par défaut si le nom d'utilisateur n'est pas trouvé
+        var username: String = "inconnu"
 
         val cursor = db.rawQuery("SELECT $COLUMN_USERNAME FROM $TABLE_NAME_LOGGED_IN_USER", null)
         cursor.use {
@@ -252,35 +252,6 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return deletedRows > 0
     }
 
-    fun getEventIdFromMarker(geoPoint: GeoPoint): Int {
-        val db = this.readableDatabase
-        val query = "SELECT $COLUMN_MARKER_ID FROM $TABLE_NAME WHERE $COLUMN_LATITUDE = ? AND $COLUMN_LONGITUDE = ?"
-        val cursor = db.rawQuery(query, arrayOf(geoPoint.latitude.toString(), geoPoint.longitude.toString()))
-
-        var eventId = -1 // Valeur par défaut si l'ID de l'événement n'est pas trouvé
-        cursor.use {
-            if (it.moveToFirst()) {
-                eventId = it.getInt(it.getColumnIndexOrThrow(COLUMN_MARKER_ID))
-            }
-        }
-        cursor.close()
-        return eventId
-    }
-
-    fun getCurrentUserId(): Int {
-        val db = this.readableDatabase
-        var userId = -1 // Valeur par défaut si l'utilisateur n'est pas connecté
-
-        val cursor = db.rawQuery("SELECT $COLUMN_USER_ID FROM $TABLE_NAME_LOGGED_IN_USER", null)
-        cursor.use {
-            if (it.moveToFirst()) {
-                userId = it.getInt(it.getColumnIndexOrThrow(COLUMN_USER_ID))
-            }
-        }
-        cursor.close()
-        return userId
-    }
-
     fun addUserToEvent(username: String, eventId: Long): Boolean {
         val db = writableDatabase
         val values = ContentValues()
@@ -311,7 +282,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         values.put(COLUMN_PASSWORD, password)
 
         val newRowId = db.insert(TABLE_AUTH, null, values)
-        return newRowId != -1L // Si l'insertion a réussi, newRowId est l'ID de la nouvelle ligne, sinon -1
+        return newRowId != -1L
     }
 
     fun isLoggedIn(username: String, password: String): Boolean {
@@ -371,8 +342,7 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         }
         cursor.close()
 
-        // Calcul de la nouvelle note moyenne
-        val totalRatings = 2 // Nombre total de notations prises en compte (ancienne et nouvelle)
+        val totalRatings = 2
         val newTotalRating = currentRating + rating
 
         val newAverageRating = if (currentRating > 0) {
@@ -424,7 +394,5 @@ class DataBase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
         return score
     }
-
-
 }
 

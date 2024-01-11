@@ -6,6 +6,5 @@ data class NominatimPlace(
     val lon: String
 )
 
-// Cette classe représente une liste de résultats de recherche
 class NominatimResponse : ArrayList<NominatimPlace>()
 
