@@ -110,7 +110,6 @@ class JoinEventFragment : Fragment(), LocationListener, MapEventsReceiver {
             centerMapOnUserLocation()
         }
         userLocationMarker.position = userLocation
-        mapViewJoinEvent.controller.setCenter(userLocation)
         mapViewJoinEvent.invalidate()
     }
 
